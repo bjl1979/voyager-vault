@@ -1,0 +1,42 @@
+# ✈️ Voyager Vault
+
+**Offline travel documents for your phone, with one folder per trip.**
+
+Keep your passport copy, visa, flight tickets, hotel bookings and insurance in a folder for each trip. Everything is stored **only on your phone**. It opens with no internet, so you can show documents to immigration, airline or hotel staff in airplane mode.
+
+![Design](design/voyager-vault-design.png)
+
+## Features
+- **One folder per trip**, with sub-folders for Passport/ID, Visa, Flights, Hotels, Insurance, Transport, Itinerary, Work/Permits and Other. Files are sorted automatically by name (for example, `eVisa.pdf` goes into Visa).
+- **📷 Scan** with the camera, or **＋ Add files** to pick PDFs and photos from the phone.
+- **★ Essentials**: pin your passport, visa and boarding pass for one-tap access at the counter.
+- **Show to Officer** mode: the document opens full screen on a white background, with zoom and PDF page navigation, and the screen stays on.
+- **End trip ▸ Back up & delete**: the whole trip folder is packed into a `.zip` with real folders inside, ready to save to Files, Google Drive, iCloud or WhatsApp. The delete button unlocks only after the backup is made.
+- **Restore** any backup zip later from Settings.
+- Works offline, has no account or cloud, and does no tracking. The Ocean-night and Sky-day themes are included.
+
+## Install on your phone
+Open the app link once **with internet**, then:
+
+| Phone | Steps |
+|---|---|
+| **iPhone** | Open the link in **Safari** ▸ tap **Share** ▸ **Add to Home Screen** |
+| **Android** | Open the link in **Chrome** ▸ tap **⋮** ▸ **Add to Home screen** / **Install app** |
+
+From then on, always open Voyager Vault from the **home-screen icon**. Then in ⚙ Settings, tap **Protect my documents** so the phone never clears them to free up space.
+
+> Documents saved in the browser tab and documents saved in the installed app are kept separately on iPhone, so add your documents from the home-screen app.
+
+## Privacy
+This website hosts **only the app's code**. Your documents are saved in the phone's private app storage (IndexedDB) and are never uploaded anywhere. Uninstalling the app or clearing Safari/Chrome website data deletes them, so back up trips with **End trip** first.
+
+## Publishing (GitHub Pages)
+1. Push these files to the `main` branch of a public repo.
+2. Repo ▸ **Settings ▸ Pages** ▸ Source: *Deploy from a branch* ▸ `main` / `/ (root)` ▸ Save.
+3. The app is then live at `https://<username>.github.io/voyager-vault/`.
+
+### Releasing an update
+Change `CACHE` in `sw.js` (for example `voyager-vault-v1.0.1`) whenever you change any file. Phones pick up the new version the next time the app opens with internet. Your documents are not affected.
+
+## Tech
+Plain HTML, CSS and JS, with no build step. It uses IndexedDB for storage and a service worker for offline use. [pdf.js](https://mozilla.github.io/pdf.js/) 3.11.174 and [JSZip](https://stuk.github.io/jszip/) 3.10.1 are bundled locally in `vendor/`.

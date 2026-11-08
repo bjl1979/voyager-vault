@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Voyager Vault – Design</title>
+<style>
+:root{
+  --navy:#0B2545; --ocean:#13315C; --deep:#081a33; --azure:#1E6FD9; --azure2:#3D8BFF;
+  --sky:#8DC5FF; --mist:#D9ECFF; --cloud:#F4F9FF; --amber:#FFB547; --green:#3DDC97; --red:#FF6B6B;
+  --card:#10294d; --line:rgba(141,197,255,.18); --muted:#8FA9CC;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:radial-gradient(1200px 600px at 20% -10%,#1b4c8f 0,transparent 60%),linear-gradient(160deg,#061427,#0B2545 60%,#0a2a55);
+  color:#fff;padding:40px 32px 56px;min-height:100vh}
+.title{text-align:center;margin-bottom:34px}
+.title h1{font-size:30px;letter-spacing:.5px}
+.title h1 span{color:var(--sky)}
+.title p{color:var(--muted);margin-top:6px;font-size:15px}
+.row{display:flex;gap:34px;justify-content:center;flex-wrap:wrap}
+.cap{text-align:center;color:var(--sky);font-weight:600;font-size:14px;margin-top:14px;letter-spacing:.3px}
+.cap small{display:block;color:var(--muted);font-weight:400;margin-top:3px}
+
+/* phone frame */
+.phone{width:330px;height:690px;border-radius:46px;background:#02070f;padding:11px;box-shadow:0 30px 60px rgba(0,0,0,.5),inset 0 0 0 2px #22344f}
+.screen{position:relative;width:100%;height:100%;border-radius:36px;overflow:hidden;background:var(--deep);display:flex;flex-direction:column}
+.status{height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-size:12px;font-weight:600;flex:none}
+.notch{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:96px;height:24px;background:#000;border-radius:14px;z-index:5}
+.body{flex:1;overflow:hidden;padding:0 16px}
+
+/* header */
+.hero{background:linear-gradient(180deg,#1E6FD9 0%,#13315C 75%,var(--deep) 100%);padding:4px 16px 16px;position:relative;flex:none}
+.hero .top{display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:8px;font-weight:800;letter-spacing:1.6px;font-size:15px}
+.brand .logo{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#fff,#8DC5FF);display:grid;place-items:center}
+.pill{white-space:nowrap;font-size:10px;padding:4px 9px;border-radius:20px;background:rgba(61,220,151,.16);color:var(--green);font-weight:700;border:1px solid rgba(61,220,151,.35)}
+.icon-btn{width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.12);display:grid;place-items:center}
+.flight{margin:14px 0 12px;height:40px;position:relative}
+.flight svg{width:100%;height:40px}
+.cloud{position:absolute;background:rgba(255,255,255,.14);border-radius:30px}
+.search{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:10px 12px;font-size:13px;color:#cfe3ff;display:flex;gap:8px;align-items:center}
+.section{font-size:11px;letter-spacing:1.6px;color:var(--sky);font-weight:700;margin:16px 2px 9px;display:flex;justify-content:space-between}
+.section b{color:var(--muted);font-weight:600}
+
+/* boarding pass */
+.pass{display:flex;background:linear-gradient(135deg,#F4F9FF,#D9ECFF);color:var(--navy);border-radius:16px;margin-bottom:12px;position:relative;box-shadow:0 8px 20px rgba(0,0,0,.25)}
+.pass .main{flex:1;padding:12px 12px 12px 14px}
+.pass .stub{width:68px;border-left:2px dashed rgba(11,37,69,.25);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
+.pass .stub:before,.pass .stub:after{content:"";position:absolute;left:-9px;width:16px;height:16px;border-radius:50%;background:var(--deep)}
+.pass .stub:before{top:-8px}.pass .stub:after{bottom:-8px}
+.stub .n{font-size:24px;font-weight:800;color:var(--azure)}
+.stub .l{font-size:9px;letter-spacing:1.4px;font-weight:700;color:#5b7699}
+.dest{font-size:17px;font-weight:800;letter-spacing:.8px;display:flex;align-items:center;gap:6px}
+.route{display:flex;align-items:center;gap:8px;margin:6px 0 4px;font-weight:800;font-size:13px;color:var(--ocean)}
+.route .ln{flex:1;border-top:1.5px dashed #8fb3dd;position:relative}
+.dates{font-size:11.5px;color:#4a6a91}
+.tags{display:flex;gap:6px;margin-top:8px}
+.tag{font-size:10px;padding:3px 8px;border-radius:12px;font-weight:700}
+.tag.amber{background:#FFE7BF;color:#9a5a00}
+.tag.blue{background:#cfe3ff;color:#1650a5}
+.tag.green{background:#c9f5e2;color:#0b7a4b}
+.tag.grey{background:#e2e9f2;color:#5b6f88}
+.pass.dim{opacity:.62}
+.fab{position:absolute;right:16px;bottom:22px;background:linear-gradient(135deg,var(--azure2),var(--azure));padding:13px 18px;border-radius:30px;font-weight:700;font-size:13.5px;box-shadow:0 10px 24px rgba(30,111,217,.55);display:flex;gap:6px;align-items:center}
+
+/* trip folder */
+.appbar{display:flex;align-items:center;gap:10px;padding:6px 16px 0}
+.appbar .t{flex:1;min-width:0}
+.appbar .t h2{font-size:19px;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.appbar .t p{font-size:11.5px;color:var(--sky);margin-top:2px}
+.endbtn{font-size:11px;font-weight:700;padding:6px 10px;border-radius:10px;background:rgba(255,181,71,.15);color:var(--amber);border:1px solid rgba(255,181,71,.35)}
+.ess{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tile{background:linear-gradient(160deg,#1E6FD9,#13315C);border-radius:14px;padding:10px 8px;text-align:center;border:1px solid rgba(141,197,255,.3)}
+.tile .th{height:52px;border-radius:8px;background:#F4F9FF;margin-bottom:7px;display:grid;place-items:center;font-size:24px;position:relative;overflow:hidden}
+.tile .th:after{content:"";position:absolute;left:8px;right:8px;bottom:8px;height:3px;background:#cfdcec;border-radius:2px;box-shadow:0 -6px 0 #cfdcec,0 -12px 0 #e1e9f3}
+.tile span{font-size:11px;font-weight:700}
+.folder{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:8px;overflow:hidden}
+.fh{display:flex;align-items:center;gap:10px;padding:10px 12px}
+.fi{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:rgba(61,139,255,.16)}
+.fh .nm{flex:1;font-weight:700;font-size:13.5px}
+.fh .ct{font-size:11px;color:var(--muted);background:rgba(255,255,255,.06);padding:2px 8px;border-radius:10px}
+.fh .ch{color:var(--muted);font-size:12px}
+.doc{display:flex;align-items:center;gap:10px;padding:9px 12px;border-top:1px solid var(--line)}
+.doc .dt{width:30px;height:36px;border-radius:5px;background:#F4F9FF;color:#c0392b;font-size:8px;font-weight:800;display:grid;place-items:center}
+.doc .dn{flex:1;font-size:12.5px;font-weight:600}
+.doc .dn small{display:block;color:var(--sky);font-weight:500;font-size:10.5px;margin-top:2px;font-family:ui-monospace,Menlo,monospace}
+.star{color:var(--amber)}
+.bar{position:absolute;left:0;right:0;bottom:0;padding:12px 16px 22px;background:linear-gradient(0deg,var(--deep) 70%,transparent);display:flex;gap:10px}
+.btn{flex:1;text-align:center;padding:13px 0;border-radius:14px;font-weight:700;font-size:13.5px}
+.btn.ghost{background:rgba(141,197,255,.12);border:1px solid rgba(141,197,255,.35);color:var(--mist)}
+.btn.primary{background:linear-gradient(135deg,var(--azure2),var(--azure));box-shadow:0 8px 18px rgba(30,111,217,.45)}
+.btn.danger{background:rgba(255,107,107,.14);border:1px solid rgba(255,107,107,.45);color:#ff9a9a}
+.btn.disabled{opacity:.35}
+
+/* sheet */
+.scrim{position:absolute;inset:0;background:rgba(2,8,18,.62)}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#0f2748;border-radius:24px 24px 0 0;padding:10px 16px 22px;border-top:1px solid rgba(141,197,255,.3)}
+.grab{width:40px;height:5px;border-radius:3px;background:rgba(255,255,255,.25);margin:0 auto 12px}
+.sheet h3{font-size:16px;margin-bottom:12px}
+.preview{height:118px;border-radius:12px;background:#F4F9FF;display:flex;align-items:center;justify-content:center;margin-bottom:12px;position:relative;overflow:hidden}
+.ticket{width:78%;height:78px;border-radius:8px;background:#fff;border:1px solid #d3e1f2;display:flex;color:var(--navy);font-size:9px}
+.ticket .a{flex:1;padding:8px}.ticket .b{width:54px;border-left:1px dashed #b7c9df;padding:8px}
+.ticket b{font-size:15px;display:block;margin:3px 0}
+.lbl{font-size:10.5px;color:var(--muted);letter-spacing:1px;font-weight:700;margin:9px 0 5px}
+.input{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:11px;padding:10px 12px;font-size:13px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:11.5px;padding:6px 10px;border-radius:20px;background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--mist)}
+.chip.on{background:var(--azure);border-color:var(--azure2);color:#fff;font-weight:700}
+.two{display:grid;grid-template-columns:1.3fr 1fr;gap:8px}
+.toggle{display:flex;align-items:center;gap:10px;margin:12px 0 14px;font-size:13px}
+.sw{width:38px;height:22px;border-radius:12px;background:var(--amber);position:relative}
+.sw:after{content:"";position:absolute;right:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff}
+
+/* officer */
+.officer{background:#fff;color:#111}
+.otop{display:flex;align-items:center;justify-content:space-between;padding:6px 14px 10px;background:#0B2545;color:#fff}
+.otop .x{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.15);display:grid;place-items:center}
+.awake{font-size:10.5px;font-weight:700;background:rgba(255,181,71,.2);color:var(--amber);padding:4px 9px;border-radius:12px}
+.visa{margin:14px;border:1.5px solid #c9d6e6;border-radius:10px;padding:14px;flex:1;background:linear-gradient(180deg,#fff,#f3f8ff);position:relative;overflow:hidden}
+.visa .hd{font-size:9px;letter-spacing:2px;color:#1650a5;font-weight:800;text-align:center}
+.visa h4{text-align:center;font-size:14px;margin:4px 0 10px;color:#0B2545}
+.visa .ph{width:70px;height:86px;background:linear-gradient(180deg,#dfe8f4,#c3d3e8);border-radius:6px;float:left;margin-right:12px;display:grid;place-items:end center;overflow:hidden}
+.visa .ph i{display:block;width:44px;height:52px;border-radius:22px 22px 0 0;background:#9fb5d1}
+.kv{font-size:9.5px;color:#334;line-height:1.75}
+.kv b{display:inline-block;width:64px;color:#7a8aa0;font-weight:600}
+.mrz{clear:both;margin-top:16px;font-family:ui-monospace,Menlo,monospace;font-size:8.6px;letter-spacing:.6px;color:#222;background:#eef3fa;padding:7px;border-radius:5px;line-height:1.5}
+.seal{position:absolute;right:16px;bottom:62px;width:58px;height:58px;border-radius:50%;border:2px solid rgba(30,111,217,.35);color:rgba(30,111,217,.5);font-size:8px;font-weight:800;display:grid;place-items:center;transform:rotate(-14deg);text-align:center}
+.oct{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 22px;background:#0B2545;color:#fff;font-size:12.5px}
+.oct .g{display:flex;gap:8px}
+.oct .c{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.12);display:grid;place-items:center;font-weight:800}
+
+/* end trip */
+.step{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px}
+.step .sh{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.num{width:24px;height:24px;border-radius:50%;background:var(--azure);display:grid;place-items:center;font-size:12px;font-weight:800}
+.num.ok{background:var(--green);color:#05331f}
+.step .sh b{font-size:13.5px}
+.step p{font-size:11.5px;color:var(--muted);margin:-4px 0 10px 34px}
+.check{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--green);margin:0 0 10px 34px;font-weight:600}
+.summary{display:flex;gap:8px;margin-bottom:12px}
+.summary div{flex:1;background:rgba(255,255,255,.05);border-radius:12px;padding:10px;text-align:center}
+.summary b{display:block;font-size:18px;color:var(--sky)}
+.summary span{font-size:10px;color:var(--muted);letter-spacing:1px}
+.zipline{font-family:ui-monospace,Menlo,monospace;font-size:10.5px;color:var(--sky);margin:0 0 10px 34px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="title">
+  <h1>VOYAGER <span>VAULT</span></h1>
+  <p>Offline travel documents · one folder per trip · stored only on your phone</p>
+</div>
+
+<div class="row">
+
+<!-- 1 HOME -->
+<div>
+<div class="phone"><div class="screen">
+  <div class="notch"></div>
+  <div class="hero">
+    <div class="status" style="padding:0 6px"><span>9:41</span><span>✈ ▮▮▮</span></div>
+    <div class="top">
+      <div class="brand"><div class="logo"><svg width="18" height="18" viewBox="0 0 24 24" fill="#1E6FD9"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg></div>VOYAGER VAULT</div>
+      <div style="display:flex;gap:8px;align-items:center"><span class="pill">● OFFLINE READY</span><div class="icon-btn">⚙</div></div>
+    </div>
+    <div class="flight">
+      <div class="cloud" style="width:60px;height:16px;left:8px;top:4px"></div>
+      <div class="cloud" style="width:44px;height:12px;right:30px;top:24px"></div>
+      <svg viewBox="0 0 300 40"><path d="M10 34 Q150 -8 285 26" fill="none" stroke="#D9ECFF" stroke-width="2" stroke-dasharray="5 6" opacity=".85"/>
+        <circle cx="10" cy="34" r="4" fill="#fff"/><circle cx="285" cy="26" r="4" fill="#FFB547"/>
+        <g transform="translate(160 10) rotate(8)"><path fill="#fff" d="M14 6v-1.4l-5.6-3.5V-2.8a1 1 0 0 0-2 0V1.1L.8 4.6V6l5.6-1.8V8L5 9v1l2.4-.7 2.4.7V9L8.4 8V4.2z" transform="rotate(90 7 3)"/></g></svg>
+    </div>
+    <div class="search">🔍 <span>Search trips, PNR, hotel…</span></div>
+  </div>
+  <div class="body">
+    <div class="section">UPCOMING <b>2</b></div>
+    <div class="pass">
+      <div class="main">
+        <div class="dest">🇸🇬 SINGAPORE</div>
+        <div class="route">DOH <span class="ln"></span> ✈ <span class="ln"></span> SIN</div>
+        <div class="dates">Mon 14 Dec – Sun 20 Dec 2026 · 7 days</div>
+        <div class="tags"><span class="tag amber">in 36 days</span><span class="tag blue">Business</span></div>
+      </div>
+      <div class="stub"><div class="n">6</div><div class="l">DOCS</div></div>
+    </div>
+    <div class="pass">
+      <div class="main">
+        <div class="dest">🇰🇪 MAASAI MARA</div>
+        <div class="route">DOH <span class="ln"></span> ✈ <span class="ln"></span> NBO</div>
+        <div class="dates">Fri 12 Feb – Sat 20 Feb 2027 · 9 days</div>
+        <div class="tags"><span class="tag amber">in 96 days</span><span class="tag blue">Photography</span></div>
+      </div>
+      <div class="stub"><div class="n">3</div><div class="l">DOCS</div></div>
+    </div>
+    <div class="section">ONGOING <b>1</b></div>
+    <div class="pass">
+      <div class="main">
+        <div class="dest">🇮🇳 KOCHI</div>
+        <div class="route">DOH <span class="ln"></span> ✈ <span class="ln"></span> COK</div>
+        <div class="dates">2 Nov – 12 Nov 2026</div>
+        <div class="tags"><span class="tag green">● Day 7 of 11</span><span class="tag blue">Family</span></div>
+      </div>
+      <div class="stub"><div class="n">4</div><div class="l">DOCS</div></div>
+    </div>
+    <div class="section">COMPLETED <b>1 ▸</b></div>
+  </div>
+  <div class="fab">＋ New Trip</div>
+</div></div>
+<div class="cap">1 · My Trips<small>Every trip is a boarding-pass folder</small></div>
+</div>
+
+<!-- 2 TRIP FOLDER -->
+<div>
+<div class="phone"><div class="screen" style="background:linear-gradient(180deg,#13315C 0,var(--deep) 140px)">
+  <div class="notch"></div>
+  <div class="status"><span>9:41</span><span>✈ ▮▮▮</span></div>
+  <div class="appbar">
+    <div class="icon-btn">←</div>
+    <div class="t"><h2>🇸🇬 Singapore</h2><p>14 – 20 Dec 2026 · in 36 days</p></div>
+    <div class="icon-btn">✎</div>
+    <div class="endbtn">End trip</div>
+  </div>
+  <div class="body">
+    <div class="section" style="color:var(--amber)">★ ESSENTIALS <b>tap to show</b></div>
+    <div class="ess">
+      <div class="tile"><div class="th">🛂</div><span>Passport</span></div>
+      <div class="tile"><div class="th">📄</div><span>Visa</span></div>
+      <div class="tile"><div class="th">🎫</div><span>Boarding</span></div>
+    </div>
+    <div class="section">FOLDERS <b>6 documents</b></div>
+    <div class="folder">
+      <div class="fh"><div class="fi">✈️</div><div class="nm">Flights</div><span class="ct">2</span><span class="ch">▾</span></div>
+      <div class="doc"><div class="dt">PDF</div><div class="dn">QR 944 · DOH → SIN<small>PNR X7K2LM · 14 Dec</small></div><span class="star">★</span></div>
+      <div class="doc"><div class="dt">PDF</div><div class="dn">QR 945 · SIN → DOH<small>PNR X7K2LM · 20 Dec</small></div></div>
+    </div>
+    <div class="folder"><div class="fh"><div class="fi">🏨</div><div class="nm">Hotels</div><span class="ct">1</span><span class="ch">▸</span></div></div>
+    <div class="folder"><div class="fh"><div class="fi">📄</div><div class="nm">Visa</div><span class="ct">1</span><span class="ch">▸</span></div></div>
+    <div class="folder"><div class="fh"><div class="fi">🛂</div><div class="nm">Passport / ID</div><span class="ct">1</span><span class="ch">▸</span></div></div>
+    <div class="folder"><div class="fh"><div class="fi">🛡️</div><div class="nm">Insurance</div><span class="ct">1</span><span class="ch">▸</span></div></div>
+  </div>
+  <div class="bar"><div class="btn ghost">📷 Scan</div><div class="btn primary">＋ Add files</div></div>
+</div></div>
+<div class="cap">2 · Trip folder<small>Sub-folders by document type</small></div>
+</div>
+
+<!-- 3 ADD DOC -->
+<div>
+<div class="phone"><div class="screen" style="background:linear-gradient(180deg,#13315C 0,var(--deep) 140px)">
+  <div class="notch"></div>
+  <div class="status"><span>9:41</span><span>✈ ▮▮▮</span></div>
+  <div class="appbar"><div class="icon-btn">←</div><div class="t"><h2>🇸🇬 Singapore</h2><p>14 – 20 Dec 2026</p></div></div>
+  <div class="scrim"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h3>Add to trip folder</h3>
+    <div class="preview"><div class="ticket"><div class="a">QATAR AIRWAYS · E-TICKET<b>DOH ✈ SIN</b>QR 944 · 14 DEC · 02:10</div><div class="b">SEAT<b>14A</b>GATE C</div></div></div>
+    <div class="lbl">TITLE</div>
+    <div class="input">QR 944 · DOH → SIN</div>
+    <div class="lbl">FOLDER</div>
+    <div class="chips"><span class="chip">🛂 Passport</span><span class="chip">📄 Visa</span><span class="chip on">✈️ Flights</span><span class="chip">🏨 Hotels</span><span class="chip">🛡️ Insurance</span><span class="chip">🚗 Transport</span><span class="chip">🗺️ Itinerary</span><span class="chip">💼 Work</span><span class="chip">📎 Other</span></div>
+    <div class="two"><div><div class="lbl">PNR / BOOKING REF</div><div class="input" style="font-family:ui-monospace,Menlo,monospace">X7K2LM</div></div><div><div class="lbl">DATE</div><div class="input">14 Dec 2026</div></div></div>
+    <div class="toggle"><div class="sw"></div>★ Pin to Essentials</div>
+    <div style="display:flex;gap:10px"><div class="btn ghost">Cancel</div><div class="btn primary">Save</div></div>
+  </div>
+</div></div>
+<div class="cap">3 · Add document<small>Camera scan or PDF / photo from phone</small></div>
+</div>
+
+<!-- 4 OFFICER -->
+<div>
+<div class="phone"><div class="screen officer">
+  <div class="notch"></div>
+  <div class="status" style="background:#0B2545;color:#fff"><span>9:41</span><span>✈ ▮▮▮</span></div>
+  <div class="otop"><div class="x">✕</div><b style="font-size:13px">Visa · Singapore</b><span class="awake">🔆 SCREEN ON</span></div>
+  <div class="visa">
+    <div class="hd">REPUBLIC OF SINGAPORE</div>
+    <h4>e-VISA · SINGLE ENTRY</h4>
+    <div class="ph"><i></i></div>
+    <div class="kv"><b>Surname</b>LAWRENCE<br><b>Given</b>BOBBY<br><b>Nationality</b>INDIAN<br><b>Visa No.</b>SG2026-48817<br><b>Valid from</b>01 DEC 2026<br><b>Valid until</b>28 FEB 2027<br><b>Purpose</b>BUSINESS</div>
+    <div class="mrz">VCSGPLAWRENCE&lt;&lt;BOBBY&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;&lt;<br>SG2026488&lt;7IND8001017M2702284&lt;&lt;&lt;</div>
+    <div class="seal">ICA<br>APPROVED</div>
+  </div>
+  <div class="oct"><span>◀ &nbsp;Page 1 / 2&nbsp; ▶</span><div class="g"><div class="c">−</div><div class="c">＋</div></div></div>
+</div></div>
+<div class="cap">4 · Show to Officer<small>Full-screen, high contrast, screen stays awake</small></div>
+</div>
+
+<!-- 5 END TRIP -->
+<div>
+<div class="phone"><div class="screen" style="background:linear-gradient(180deg,#13315C 0,var(--deep) 140px)">
+  <div class="notch"></div>
+  <div class="status"><span>9:41</span><span>✈ ▮▮▮</span></div>
+  <div class="appbar"><div class="icon-btn">←</div><div class="t"><h2>🇮🇳 Kochi</h2><p>Trip completed · 12 Nov 2026</p></div></div>
+  <div class="scrim"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h3>End trip · Kochi 🇮🇳</h3>
+    <div class="summary"><div><b>4</b><span>DOCS</span></div><div><b>4</b><span>FOLDERS</span></div><div><b>3.8 MB</b><span>SIZE</span></div></div>
+    <div class="step">
+      <div class="sh"><div class="num ok">✓</div><b>Back up trip folder</b></div>
+      <div class="zipline">📦 Kochi_2026-11-02.zip<br>&nbsp;&nbsp;├ Flights/ · Hotels/<br>&nbsp;&nbsp;├ Visa/ · Passport/<br>&nbsp;&nbsp;└ trip.json</div>
+      <div class="check">✔ Saved to Files / Google Drive</div>
+    </div>
+    <div class="step">
+      <div class="sh"><div class="num">2</div><b>Delete from phone</b></div>
+      <p>Frees 3.8 MB. You can restore it any time from the zip.</p>
+      <div class="btn danger">🗑 Delete trip from phone</div>
+    </div>
+    <div class="btn ghost" style="display:block">Cancel · keep trip</div>
+  </div>
+</div></div>
+<div class="cap">5 · End trip<small>Back up → then delete (delete unlocks after backup)</small></div>
+</div>
+
+</div>
+</body>
+</html>

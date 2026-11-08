@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Voyager Vault</title>
+<meta name="description" content="Offline travel documents – one folder per trip, stored only on your phone.">
+<meta name="theme-color" content="#0B2545">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Voyager Vault">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main id="app" aria-live="polite"></main>
+<div id="layer"></div>
+<div id="toast" role="status"></div>
+
+<input type="file" id="pickFiles" accept="application/pdf,image/*" multiple hidden>
+<input type="file" id="pickCam" accept="image/*" capture="environment" hidden>
+<input type="file" id="pickZip" accept=".zip,application/zip,application/x-zip-compressed" hidden>
+
+<script src="vendor/jszip.min.js"></script>
+<script src="db.js"></script>
+<script src="zip.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
