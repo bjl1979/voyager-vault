@@ -1,6 +1,6 @@
 /* Voyager Vault – offline travel document folders (all data stays on this device) */
 'use strict';
-const APP_VERSION = '1.0.3';
+const APP_VERSION = '1.0.4';
 
 const CATS = [
   { id: 'passport',  label: 'Passport / ID',  short: 'Passport',  folder: 'Passport_ID',  icon: '🛂' },
@@ -187,16 +187,27 @@ async function makeThumb(blob, type) {
 const thumbHTML = d => d.thumb ? `<img src="${d.thumb}" alt="">` : (d.type === 'application/pdf' ? 'PDF' : 'FILE');
 
 /* ---------------- offline status ---------------- */
-async function offlineReady() {
-  if (!('serviceWorker' in navigator) || !('caches' in window) || location.protocol === 'file:') return false;
-  try { return !!(await caches.match(new URL('vendor/pdf.worker.min.js', location.href).href)); } catch { return false; }
+const OFFLINE_FILES = 15;
+async function offlineStatus() {
+  const st = { supported: 'serviceWorker' in navigator && 'caches' in window && location.protocol !== 'file:', active: false, files: 0, shell: false, cache: '' };
+  if (!st.supported) return st;
+  st.active = !!navigator.serviceWorker.controller;
+  try {
+    const name = (await caches.keys()).filter(k => k.startsWith('voyager-vault-')).sort().pop();
+    if (name) {
+      const c = await caches.open(name); st.cache = name;
+      st.files = (await c.keys()).length;
+      st.shell = !!(await c.match(new URL('index.html', location.href).href));
+    }
+  } catch {}
+  return st;
 }
+const isOfflineReady = st => st.active && st.shell && st.files >= OFFLINE_FILES;
 async function paintOfflinePill() {
   const el = $('#offpill'); if (!el) return;
-  const ready = await offlineReady();
-  if (!navigator.onLine) { el.className = 'pill ok'; el.textContent = '✈ OFFLINE MODE'; }
-  else if (ready) { el.className = 'pill ok'; el.textContent = '● OFFLINE READY'; }
-  else { el.className = 'pill wait'; el.textContent = location.protocol === 'file:' ? 'INSTALL NEEDED' : 'PREPARING OFFLINE…'; }
+  const st = await offlineStatus();
+  if (isOfflineReady(st)) { el.className = 'pill ok'; el.textContent = navigator.onLine ? '● OFFLINE READY' : '✈ OFFLINE MODE'; }
+  else { el.className = 'pill wait'; el.textContent = !st.supported ? 'INSTALL NEEDED' : navigator.onLine ? 'PREPARING OFFLINE…' : 'NOT SAVED OFFLINE'; }
 }
 window.addEventListener('online', paintOfflinePill);
 window.addEventListener('offline', paintOfflinePill);
@@ -700,6 +711,8 @@ async function openSettings() {
   const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
   const theme = document.documentElement.dataset.theme;
+  const off = await offlineStatus();
+  const tick = b => b ? '✅' : '❌';
   openSheet(`
     <h3>Settings</h3>
     <div class="setrow"><h4>📱 Storage on this phone</h4>
@@ -709,6 +722,10 @@ async function openSettings() {
       <p style="margin-top:8px">${persisted ? '🔒 Protected: the phone will not clear your documents to free space.' : '⚠️ Not yet protected. Install the app to your home screen, then tap below.'}</p>
       ${persisted ? '' : '<button class="btn ghost block" id="sPersist">Protect my documents</button>'}
     </div>
+    <div class="setrow"><h4>✈️ Offline check</h4>
+      <p>${tick(off.active)} Offline engine running in this app<br>${tick(off.shell)} App page saved<br>${tick(off.files >= OFFLINE_FILES)} App files saved (${off.files}/${OFFLINE_FILES})<br>
+      ${isOfflineReady(off) ? '<b style="color:var(--green)">Ready: this app opens in airplane mode.</b>' : '<b style="color:var(--amber)">Not ready yet. Keep internet on, close the app fully and reopen it, then check again.</b>'}</p>
+      <p style="font-size:11px;margin-top:6px">${esc(off.cache || 'no cache')} · ${esc(location.pathname + location.search)} · ${standalone ? 'installed app' : 'browser tab'}</p></div>
     <div class="setrow"><h4>♻️ Restore a trip backup</h4><p>Pick a Voyager Vault .zip (made with “End trip”) to bring that trip folder back.</p>
       <button class="btn primary block" id="sRestore">Choose backup zip</button></div>
     <div class="setrow"><h4>🎨 Theme</h4><div class="seg"><button data-th="dark" class="${theme === 'dark' ? 'on' : ''}">Ocean night</button><button data-th="light" class="${theme === 'light' ? 'on' : ''}">Sky day</button></div></div>
@@ -773,6 +790,7 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   navigator.serviceWorker.register('sw.js').then(reg => {
     const done = () => setTimeout(paintOfflinePill, 300);
     navigator.serviceWorker.ready.then(done);
+    navigator.serviceWorker.addEventListener('controllerchange', done);
     reg.addEventListener('updatefound', () => { const w = reg.installing; w && w.addEventListener('statechange', () => w.state === 'activated' && done()); });
   }).catch(err => console.warn('SW registration failed', err));
 }
