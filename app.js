@@ -1,6 +1,6 @@
 /* Voyager Vault – offline travel document folders (all data stays on this device) */
 'use strict';
-const APP_VERSION = '1.0.2';
+const APP_VERSION = '1.0.3';
 
 const CATS = [
   { id: 'passport',  label: 'Passport / ID',  short: 'Passport',  folder: 'Passport_ID',  icon: '🛂' },
@@ -578,6 +578,20 @@ async function keepAwake(on) {
 }
 document.addEventListener('visibilitychange', () => { if (viewerOpen && document.visibilityState === 'visible') keepAwake(true); });
 
+let rotatedIn = null;
+function rotateDataURL(src) {
+  return new Promise((res, rej) => {
+    const i = new Image();
+    i.onload = () => {
+      const c = document.createElement('canvas'); c.width = i.naturalHeight; c.height = i.naturalWidth;
+      const ctx = c.getContext('2d'); ctx.translate(c.width / 2, c.height / 2); ctx.rotate(Math.PI / 2);
+      ctx.drawImage(i, -i.naturalWidth / 2, -i.naturalHeight / 2);
+      res(c.toDataURL('image/jpeg', 0.72));
+    };
+    i.onerror = rej; i.src = src;
+  });
+}
+
 async function openViewer(docId) {
   const d = await DB.getDoc(docId); if (!d) return;
   const isPdf = d.type === 'application/pdf', isImg = (d.type || '').startsWith('image/');
@@ -587,17 +601,29 @@ async function openViewer(docId) {
     ${d.ref ? `<div class="vref">${esc(cat(d.category).short === 'Flights' ? 'PNR' : 'Ref')}<span>${esc(d.ref)}</span></div>` : ''}
     <div class="vbody" id="vb"><div class="msg"><span class="spin"></span></div></div>
     <div class="vbot"><div class="g">${isPdf ? '<button id="vprev" aria-label="Previous page">◀</button><span id="vpage">1 / 1</span><button id="vnext" aria-label="Next page">▶</button>' : `<span>${fmtSize(d.size || 0)}</span>`}</div>
-      <div class="g"><button id="vout" aria-label="Zoom out">−</button><button id="vin" aria-label="Zoom in">＋</button>${navigator.share ? '<button id="vshare" aria-label="Share">⇪</button>' : ''}</div></div>`;
+      <div class="g">${isImg || isPdf ? '<button id="vrot" aria-label="Rotate 90 degrees" title="Rotate">⟳</button>' : ''}<button id="vout" aria-label="Zoom out">−</button><button id="vin" aria-label="Zoom in">＋</button>${navigator.share ? '<button id="vshare" aria-label="Share">⇪</button>' : ''}</div></div>`;
   layer.append(v);
   viewerOpen = true;
-  let url, pdf, page = 1, zoom = 1, token = 0;
+  let url, pdf, page = 1, zoom = 1, token = 0, rot = (d.rotation || 0) % 360;
   const vb = $('#vb', v);
-  pushOverlay(() => { viewerOpen = false; keepAwake(false); url && URL.revokeObjectURL(url); pdf && pdf.destroy(); v.remove(); });
+  pushOverlay(() => {
+    viewerOpen = false; keepAwake(false); url && URL.revokeObjectURL(url); pdf && pdf.destroy(); v.remove();
+    if (rotatedIn) { const t = rotatedIn; rotatedIn = null; if (currentTrip && currentTrip.id === t && /trip\//.test(location.hash)) renderTrip(t); }
+  });
   $('#vx', v).onclick = () => back();
   keepAwake(true).then(ok => ok && $('#vawake', v).classList.remove('hidden'));
   const ZOOMS = [1, 1.5, 2, 3, 4];
   const setZoom = dir => { const i = Math.max(0, Math.min(ZOOMS.length - 1, ZOOMS.indexOf(zoom) + dir)); zoom = ZOOMS[i]; draw(); };
   $('#vin', v).onclick = () => setZoom(1); $('#vout', v).onclick = () => setZoom(-1);
+  const rb = $('#vrot', v);
+  if (rb) rb.onclick = async () => {
+    rot = (rot + 90) % 360; vb.scrollTop = 0; vb.scrollLeft = 0; draw();
+    // remember it, and turn the thumbnail too
+    d.rotation = rot;
+    if (d.thumb) d.thumb = await rotateDataURL(d.thumb).catch(() => d.thumb);
+    await DB.saveDoc(d).catch(() => {});
+    rotatedIn = d.tripId;
+  };
   const sh = $('#vshare', v);
   if (sh) sh.onclick = async () => {
     try { await navigator.share({ files: [new File([d.blob], d.fileName || d.title, { type: d.type })], title: d.title }); }
@@ -613,22 +639,36 @@ async function openViewer(docId) {
         url = URL.createObjectURL(d.blob);
         img = new Image(); img.alt = d.title;
         await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; }).catch(() => { vb.innerHTML = '<div class="msg">This image could not be opened.</div>'; });
-        vb.innerHTML = ''; vb.append(img);
       }
-      const fit = Math.min(cw / img.naturalWidth, ch / img.naturalHeight);
-      img.style.width = Math.round(img.naturalWidth * fit * zoom) + 'px';
+      if (!img.naturalWidth) return;
+      const swap = rot === 90 || rot === 270;
+      const nw = swap ? img.naturalHeight : img.naturalWidth, nh = swap ? img.naturalWidth : img.naturalHeight;
+      const fit = Math.min(cw / nw, ch / nh) * zoom;
+      const cssW = nw * fit, cssH = nh * fit;
+      let px = Math.min(window.devicePixelRatio || 1, 3);
+      if (cssW * cssH * px * px > 16e6) px = Math.sqrt(16e6 / (cssW * cssH));
+      const c = document.createElement('canvas');
+      c.width = Math.round(cssW * px); c.height = Math.round(cssH * px);
+      c.style.width = Math.round(cssW) + 'px'; c.style.height = Math.round(cssH) + 'px';
+      c.setAttribute('role', 'img'); c.setAttribute('aria-label', d.title);
+      const ctx = c.getContext('2d');
+      ctx.translate(c.width / 2, c.height / 2); ctx.rotate(rot * Math.PI / 180);
+      const w = img.naturalWidth * fit * px, h = img.naturalHeight * fit * px;
+      ctx.drawImage(img, -w / 2, -h / 2, w, h);
+      vb.innerHTML = ''; vb.append(c);
     } else if (isPdf) {
       try {
         if (!pdf) { const pdfjs = await loadPdfJs(); pdf = await pdfjs.getDocument({ data: await d.blob.arrayBuffer() }).promise; }
         const pg = await pdf.getPage(page);
         if (my !== token) return;
-        const vp0 = pg.getViewport({ scale: 1 });
+        const rotation = ((pg.rotate || 0) + rot) % 360;
+        const vp0 = pg.getViewport({ scale: 1, rotation });
         const cssW = Math.max(200, (cw - 16) * zoom);
         let scale = cssW / vp0.width;
         const dpr = Math.min(window.devicePixelRatio || 1, 3);
         let px = scale * dpr;
         const maxPx = 16e6; if (vp0.width * vp0.height * px * px > maxPx) px = Math.sqrt(maxPx / (vp0.width * vp0.height));
-        const vp = pg.getViewport({ scale: px });
+        const vp = pg.getViewport({ scale: px, rotation });
         const c = document.createElement('canvas'); c.width = Math.floor(vp.width); c.height = Math.floor(vp.height);
         c.style.width = Math.round(cssW) + 'px'; c.style.margin = '8px auto';
         await pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
