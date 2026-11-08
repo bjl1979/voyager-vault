@@ -1,6 +1,6 @@
 /* Voyager Vault – offline travel document folders (all data stays on this device) */
 'use strict';
-const APP_VERSION = '1.0.1';
+const APP_VERSION = '1.0.2';
 
 const CATS = [
   { id: 'passport',  label: 'Passport / ID',  short: 'Passport',  folder: 'Passport_ID',  icon: '🛂' },
@@ -224,7 +224,7 @@ async function renderHome() {
     <header class="hero">
       <div class="top">
         <div class="brand"><div class="logo">${PLANE}</div><div>VOYAGER<br>VAULT</div></div>
-        <div style="display:flex;gap:8px;align-items:center"><span id="offpill" class="pill wait">…</span>
+        <div style="display:flex;gap:8px;align-items:center"><button id="btnInstall" class="pill ok hidden" style="background:#fff;color:#1E6FD9;border-color:#fff">⬇ INSTALL APP</button><span id="offpill" class="pill wait">…</span>
           <button class="icon-btn" id="btnSettings" aria-label="Settings">${GEAR}</button></div>
       </div>
       <div class="flight" aria-hidden="true">
@@ -239,6 +239,7 @@ async function renderHome() {
     <div class="wrap" id="list"></div>
     <button class="fab" id="btnNewTrip">＋ New Trip</button>`;
   $('#btnSettings').onclick = openSettings;
+  paintInstall();
   $('#btnNewTrip').onclick = () => openTripSheet();
   $('#q').oninput = e => { homeQuery = e.target.value; renderList(); };
   paintOfflinePill();
@@ -671,7 +672,7 @@ async function openSettings() {
     <div class="setrow"><h4>♻️ Restore a trip backup</h4><p>Pick a Voyager Vault .zip (made with “End trip”) to bring that trip folder back.</p>
       <button class="btn primary block" id="sRestore">Choose backup zip</button></div>
     <div class="setrow"><h4>🎨 Theme</h4><div class="seg"><button data-th="dark" class="${theme === 'dark' ? 'on' : ''}">Ocean night</button><button data-th="light" class="${theme === 'light' ? 'on' : ''}">Sky day</button></div></div>
-    ${standalone ? '' : `<div class="setrow"><h4>⬇️ Install on this phone</h4><p>${ios
+    ${standalone ? '' : `<div class="setrow"><h4>⬇️ Install on this phone</h4>${installEvt ? '<button class="btn primary block" id="sInstall" style="margin:4px 0 10px">⬇ Install Voyager Vault</button>' : ''}<p>${ios
       ? 'In Safari tap <b>Share</b> (square with arrow), then <b>Add to Home Screen</b>. Open Voyager Vault from the home screen icon from now on.'
       : 'In Chrome tap <b>⋮</b>, then <b>Add to Home screen</b> / <b>Install app</b>. Open Voyager Vault from the home screen icon from now on.'}</p></div>`}
     <div class="setrow"><h4>🛡️ Privacy</h4><p>Your documents are stored only on this phone. No account, no cloud and no tracking, and the app works in airplane mode. Back up a trip with “End trip” before deleting it or changing phones.</p></div>
@@ -683,6 +684,7 @@ async function openSettings() {
       toast(ok ? '🔒 Documents protected' : 'Your browser declined. Install the app to the home screen and try again.', 4000);
       if (ok) { await back(); openSettings(); }
     };
+    const si = $('#sInstall', sheet); if (si) si.onclick = async () => { await back(); installApp(); };
     $('#sRestore', sheet).onclick = () => { const i = $('#pickZip'); i.value = ''; i.click(); };
     $$('.seg button', sheet).forEach(b => b.onclick = () => {
       applyTheme(b.dataset.th); store.set('vv-theme', b.dataset.th);
@@ -707,6 +709,24 @@ $('#pickZip').addEventListener('change', async e => {
     navigate('/trip/' + newTripId);
   } catch (err) { console.error(err); toast(err.message || 'Could not read this backup', 4500); }
 });
+
+/* ---------------- install prompt (Android Chrome / Samsung Internet) ---------------- */
+let installEvt = null;
+const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; paintInstall(); });
+window.addEventListener('appinstalled', () => { installEvt = null; paintInstall(); toast('✔ Voyager Vault installed. Open it from your Apps screen or home screen.', 5000); });
+function paintInstall() {
+  const b = $('#btnInstall'); if (!b) return;
+  b.classList.toggle('hidden', !installEvt || isStandalone());
+  b.onclick = installApp;
+}
+async function installApp() {
+  if (!installEvt) { toast('Use the browser menu: ⋮ › Add to Home screen › Install', 4000); return; }
+  installEvt.prompt();
+  const { outcome } = await installEvt.userChoice.catch(() => ({}));
+  installEvt = null; paintInstall();
+  if (outcome === 'accepted') toast('Installing… the icon appears in a few seconds', 4000);
+}
 
 /* ---------------- boot ---------------- */
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
