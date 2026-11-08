@@ -1,6 +1,6 @@
 /* Voyager Vault – offline travel document folders (all data stays on this device) */
 'use strict';
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.0.1';
 
 const CATS = [
   { id: 'passport',  label: 'Passport / ID',  short: 'Passport',  folder: 'Passport_ID',  icon: '🛂' },
@@ -651,16 +651,20 @@ async function openViewer(docId) {
 async function openSettings() {
   let est = { usage: 0, quota: 0 }, persisted = false;
   try { est = await navigator.storage.estimate(); persisted = await navigator.storage.persisted(); } catch {}
-  const trips = await DB.allTrips();
-  const pct = est.quota ? Math.max(1, Math.round(est.usage / est.quota * 100)) : 0;
+  const [trips, allDocs] = await Promise.all([DB.allTrips(), DB.allDocsMeta()]);
+  const docBytes = allDocs.reduce((s, d) => s + (d.size || 0), 0);
+  const pct = est.quota ? Math.min(100, Math.max(1, Math.round(docBytes / est.quota * 100))) : 0;
+  const det = est.usageDetails || {};
+  const parts = [det.indexedDB != null ? `database ${fmtSize(det.indexedDB)}` : '', det.caches != null ? `app cache ${fmtSize(det.caches)}` : '', det.serviceWorkerRegistrations != null ? `service worker ${fmtSize(det.serviceWorkerRegistrations)}` : ''].filter(Boolean).join(' · ');
   const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
   const theme = document.documentElement.dataset.theme;
   openSheet(`
     <h3>Settings</h3>
     <div class="setrow"><h4>📱 Storage on this phone</h4>
-      <p>${trips.length} trip${trips.length === 1 ? '' : 's'} · using ${fmtSize(est.usage || 0)}${est.quota ? ` of ${fmtSize(est.quota)} available to the app` : ''}</p>
+      <p style="color:var(--text);font-size:14px"><b>Your documents: ${fmtSize(docBytes)}</b> · ${allDocs.length} file${allDocs.length === 1 ? '' : 's'} in ${trips.length} trip${trips.length === 1 ? '' : 's'}</p>
       <div class="meter" style="margin-top:8px"><i style="width:${pct}%"></i></div>
+      ${est.quota ? `<p style="margin-top:6px;font-size:11.5px">Space the phone allows this app: up to ${fmtSize(est.quota)}. The browser's own estimate for this website is ${fmtSize(est.usage || 0)}${parts ? ` (${parts})` : ''}. This includes browser overhead, and is not your files.</p>` : ''}
       <p style="margin-top:8px">${persisted ? '🔒 Protected: the phone will not clear your documents to free space.' : '⚠️ Not yet protected. Install the app to your home screen, then tap below.'}</p>
       ${persisted ? '' : '<button class="btn ghost block" id="sPersist">Protect my documents</button>'}
     </div>
