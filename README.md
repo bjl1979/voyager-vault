@@ -15,7 +15,7 @@ Keep your passport copy, visa, flight tickets, hotel bookings and insurance in a
 - **Restore** any backup zip later from Settings.
 - Works offline, has no account or cloud, and does no tracking. The Ocean-night and Sky-day themes are included.
 
-## 📱 Android app (v2.1.0) – To-Do with alarm reminders
+## 📱 Android app (v2.2.0) – To-Do with alarm reminders
 The Android app is the full Voyager Vault **plus a To-Do list in every trip, with real alarms** that ring even when the app is closed and the phone is in airplane mode.
 
 | Priority | Reminder |

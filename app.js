@@ -1,6 +1,6 @@
 /* Voyager Vault – offline travel document folders (all data stays on this device) */
 'use strict';
-const APP_VERSION = '2.1.0';
+const APP_VERSION = '2.2.0';
 
 const CATS = [
   { id: 'passport',  label: 'Passport / ID',  short: 'Passport',  folder: 'Passport_ID',  ic: 'book-user', c1: '#818CF8', c2: '#6366F1' },
@@ -28,7 +28,8 @@ const NOTE_TOPICS = [
   { k: 'To do',      ic: 'circle-check', col: '#2563EB', hint: 'e.g. Check in online 24 h before, print hotel voucher' },
 ];
 const topicOf = k => NOTE_TOPICS.find(n => n.k === k) || { ic: 'notebook-text', col: '#8DC5FF' };
-const noteText = t => (t.noteItems || []).map(n => `${n.topic || ''} ${n.text}`).join(' ') + ' ' + (t.todos || []).map(x => `${x.title} ${x.details || ''}`).join(' ');
+const packText = t => ((t.carry && t.carry.sections) || []).map(s => s.name + ' ' + s.items.map(i => i.text).join(' ')).join(' ');
+const noteText = t => packText(t) + ' ' + (t.noteItems || []).map(n => `${n.topic || ''} ${n.text}`).join(' ') + ' ' + (t.todos || []).map(x => `${x.title} ${x.details || ''}`).join(' ');
 const PRIO = { urgent: { label: 'Urgent', ic: 'siren' }, normal: { label: 'Normal', ic: 'bell' }, delayed: { label: 'Delayed', ic: 'circle-pause' } };
 const openUrgent = t => (t.todos || []).filter(x => !x.done && x.priority === 'urgent').length;
 const collapsed = (() => { try { return JSON.parse(localStorage.getItem('vv-collapse') || '{}'); } catch { return {}; } })();
@@ -324,6 +325,7 @@ let currentTrip = null;
 const TABS = [
   { id: 'essentials', label: 'Essentials', ic: 'star' },
   { id: 'todo', label: 'To-Do', ic: 'list-checks' },
+  { id: 'pack', label: 'Pack', ic: 'luggage' },
   { id: 'notes', label: 'Notes', ic: 'notebook-pen' },
   { id: 'folders', label: 'Folders', ic: 'folder-open' },
 ];
@@ -364,6 +366,7 @@ async function renderTrip(id, tabArg) {
   const badge = { essentials: pinned.length ? `<span class="bdg">${pinned.length}</span>` : '',
     todo: nU ? `<span class="bdg red">${nU}</span>` : openT.length ? `<span class="bdg">${openT.length}</span>` : '',
     notes: notes.length ? `<span class="bdg">${notes.length}</span>` : '',
+    pack: (() => { const c = packStats(t); return c.total ? (c.left ? `<span class="bdg">${c.left}</span>` : `<span class="bdg ok">${icon('check', 10, 3.5)}</span>`) : ''; })(),
     folders: docs.length ? `<span class="bdg">${docs.length}</span>` : '' };
   const tabsHTML = `<nav class="tabs" role="tablist">${TABS.map(x => `<button class="tab ${x.id === tab ? 'on' : ''}" role="tab" aria-selected="${x.id === tab}" data-tab="${x.id}">
       <span class="pill">${icon(x.ic, 20, x.id === tab ? 2.2 : 1.9)}${badge[x.id]}</span>${x.label}</button>`).join('')}</nav>`;
@@ -390,6 +393,8 @@ async function renderTrip(id, tabArg) {
   } else if (tab === 'todo') {
     body += todos.length ? todoListHTML(t) : `<div class="empty"><div class="bigic">${icon('list-checks', 44, 1.6)}</div><h3>Things to do before you go</h3>
       <p>Buy a SIM, print a visa copy, exchange money… Mark a task <b>Urgent</b> for red alarms that repeat every 6 hours until done.</p></div>`;
+  } else if (tab === 'pack') {
+    body += await packHTML(t);
   } else if (tab === 'notes') {
     body += notes.length ? `<div class="notes-card">${notes.map(noteRow).join('')}</div>`
       : `<div class="empty"><div class="bigic">${icon('notebook-pen', 44, 1.6)}</div><h3>Things to remember</h3><p>Which SIM to buy, the currency, taxi apps, emergency numbers, the embassy address…</p></div>`;
@@ -415,6 +420,9 @@ async function renderTrip(id, tabArg) {
   const bars = {
     todo: `<button class="btn primary" data-act="todo">${icon('plus', 19, 2.4)}Add task</button>`,
     notes: `<button class="btn primary" data-act="note">${icon('plus', 19, 2.4)}Add note</button>`,
+    pack: packMode(t) === 'home' && packStats(t).total
+      ? `<button class="btn ghost" data-act="packreset">${icon('rotate-ccw', 18)}Reset return check</button>`
+      : `<button class="btn primary" data-act="newsec">${icon('plus', 19, 2.4)}New section</button>`,
   };
   const bar = bars[tab] || `<button class="btn ghost" data-act="scan">${icon('camera', 19)}Scan</button><button class="btn primary" data-act="add">${icon('plus', 19, 2.4)}Add files</button>`;
 
@@ -450,7 +458,15 @@ async function renderTrip(id, tabArg) {
     else if (d.todo) openTodoSheet(t, d.todo);
     else if (d.ttog) toggleTodo(t, d.ttog);
     else if (d.act === 'tdone') { showDoneTodos[t.id] = !showDoneTodos[t.id]; renderTrip(id); }
+    else if (d.act === 'newsec') openSectionSheet(t);
+    else if (d.act === 'packcopy') openCopyPackSheet(t);
+    else if (d.act === 'packreset') resetReturn(t);
+    else if (d.pmode) setPackMode(t, d.pmode);
+    else if (d.sec) toggleSection(t, d.sec);
+    else if (d.secmenu) openSectionSheet(t, d.secmenu);
+    else if (d.item) { if (Date.now() - lastLongPress > 600) togglePackItem(t, d.item); }
   };
+  wirePackInputs(t);
 
   // swipe left / right to change tab
   const pane = $('.tabbody', app);
@@ -463,6 +479,208 @@ async function renderTrip(id, tabArg) {
     const i = TABS.findIndex(x => x.id === tab) + (dx < 0 ? 1 : -1);
     if (i >= 0 && i < TABS.length) switchTab(id, TABS[i].id);
   }, { passive: true });
+}
+
+/* ---------------- things to carry (Pack tab) ---------------- */
+const PACK_PRESETS = [
+  { k: 'camera', name: 'Camera gear', ic: 'camera', c1: '#60A5FA', c2: '#2563EB', re: /camera|lens|photo|tripod|drone/i },
+  { k: 'clothes', name: 'Clothes', ic: 'shirt', c1: '#C084FC', c2: '#9333EA', re: /cloth|dress|shirt|wear|jacket|shoe/i },
+  { k: 'toilet', name: 'Toiletries', ic: 'bath', c1: '#2DD4BF', c2: '#0D9488', re: /toilet|bath|wash|groom|cosmetic|skin/i },
+  { k: 'elec', name: 'Electronics', ic: 'battery-charging', c1: '#FBBF24', c2: '#D97706', re: /electr|charg|cable|adapter|power|laptop|gadget/i },
+  { k: 'meds', name: 'Medicines', ic: 'pill', c1: '#F87171', c2: '#DC2626', re: /medic|pill|first.?aid|health|drug/i },
+  { k: 'acc', name: 'Accessories', ic: 'glasses', c1: '#F472B6', c2: '#DB2777', re: /access|jewel|watch|glass|sun/i },
+  { k: 'docs', name: 'Documents', ic: 'book-open', c1: '#818CF8', c2: '#6366F1', re: /doc|passport|paper|money|wallet|card/i },
+  { k: 'outdoor', name: 'Trekking gear', ic: 'mountain-snow', c1: '#4ADE80', c2: '#16A34A', re: /trek|hik|outdoor|camp|safari|binocular/i },
+  { k: 'other', name: 'Other', ic: 'package', c1: '#CBD5E1', c2: '#64748B', re: /$^/ },
+];
+const presetOf = k => PACK_PRESETS.find(p => p.k === k) || PACK_PRESETS[PACK_PRESETS.length - 1];
+const guessPreset = name => (PACK_PRESETS.find(p => p.re.test(name || '')) || PACK_PRESETS[PACK_PRESETS.length - 1]).k;
+const packOf = t => (t.carry = t.carry || { mode: 'going', sections: [] });
+const packMode = t => (t.carry && t.carry.mode) || 'going';
+function packStats(t) {
+  const items = ((t.carry && t.carry.sections) || []).flatMap(s => s.items);
+  const home = packMode(t) === 'home';
+  const done = items.filter(i => home ? i.home : i.packed).length;
+  return { total: items.length, done, left: items.length - done, packed: items.filter(i => i.packed).length };
+}
+/** "Batteries x4" → { text: 'Batteries', qty: 4 } */
+function parseItem(s) {
+  const m = s.trim().match(/^(.*?)\s*[x×]\s*(\d{1,3})$/i);
+  return m && m[1] ? { text: m[1].trim(), qty: +m[2] } : { text: s.trim(), qty: 0 };
+}
+const savePack = async t => { await DB.saveTrip(t); protectStorage(); };
+let lastLongPress = 0;
+
+async function packHTML(t) {
+  const c = packOf(t), st = packStats(t), home = c.mode === 'home';
+  const others = (await DB.allTrips()).filter(x => x.id !== t.id && x.carry && x.carry.sections && x.carry.sections.length);
+  if (!c.sections.length) {
+    return `<div class="empty"><div class="bigic">${icon('luggage', 44, 1.6)}</div><h3>Things to carry</h3>
+      <p>Make sections like <b>Camera gear</b>, <b>Clothes</b> and <b>Toiletries</b>, add the items, then tick them off as you pack.</p>
+      <button class="btn primary" style="display:inline-flex;margin-top:14px" data-act="newsec">${icon('plus', 18, 2.4)}Create first section</button>
+      ${others.length ? `<button class="btn ghost" style="display:inline-flex;margin-top:10px" data-act="packcopy">${icon('copy', 18)}Copy from another trip</button>` : ''}</div>`;
+  }
+  const pct = st.total ? Math.round(st.done * 100 / st.total) : 0;
+  let h = `<div class="seg2" role="tablist"><button data-pmode="going" class="${home ? '' : 'on'}">${icon('luggage', 14, 2.3)}Going</button><button data-pmode="home" class="${home ? 'on' : ''}">${icon('rotate-ccw', 14, 2.3)}Coming home</button></div>`;
+  if (home) {
+    h += `<div class="ret">${icon('rotate-ccw', 20, 2.2)}<div><b>Return check · ${st.done} of ${st.total} back in the bag</b>Struck through = packed on the way out. Tick each item as it goes back in.</div></div>`;
+  } else {
+    h += `<div class="prog"><div class="top"><span class="chip-ic" style="width:38px;height:38px;background:linear-gradient(145deg,#4ADE80,#16A34A)">${icon('luggage', 19, 2.2)}</span>
+      <div class="big">${st.done} <small>of ${st.total} packed</small></div><span class="pct ${st.left ? '' : 'all'}">${st.left ? pct + '%' : 'All packed ✓'}</span></div>
+      <div class="bar2"><i style="width:${pct}%"></i></div></div>`;
+  }
+  for (const s of c.sections) {
+    const p = presetOf(s.key);
+    const sd = s.items.filter(i => home ? i.home : i.packed).length, stot = s.items.length;
+    const spct = stot ? Math.round(sd * 100 / stot) : 0;
+    const state = !stot ? 'No items yet' : sd === stot ? `<span class="done-tag">${icon('check', 12, 3)}${home ? 'All back in the bag' : 'All packed'}</span>`
+      : `${sd}/${stot} ${home ? 'back in bag' : 'packed'} <span class="mini"><i style="width:${spct}%;${home ? 'background:#FFB547' : ''}"></i></span>`;
+    h += `<div class="sec" data-secid="${s.id}"><div class="sh2"><button class="secbtn" data-sec="${s.id}" aria-expanded="${!s.collapsed}">
+        <span class="chip-ic" style="width:34px;height:34px;background:linear-gradient(145deg,${p.c1},${p.c2})">${icon(p.ic, 17, 2.2)}</span>
+        <span class="nm"><b>${esc(s.name)}</b><small>${state}</small></span>${icon(s.collapsed ? 'chevron-right' : 'chevron-down', 18, 2.2, 'chev')}</button>
+        <button class="more" data-secmenu="${s.id}" aria-label="Section options">${icon('ellipsis', 18)}</button></div>`;
+    if (!s.collapsed) {
+      for (const i of s.items) {
+        const cls = home ? (i.home ? 'home' : i.packed ? 'out' : '') : (i.packed ? 'on' : '');
+        const ticked = home ? i.home : i.packed;
+        h += `<button class="it ${cls}" data-item="${s.id}:${i.id}"><span class="cb">${ticked ? icon('check', 14, 3) : ''}</span><span class="tx">${esc(i.text)}</span>
+          ${i.qty ? `<span class="qty">×${i.qty}</span>` : ''}${home && i.home ? `<span class="back">${icon('rotate-ccw', 11, 2.6)}BACK</span>` : ''}</button>`;
+      }
+      h += `<form class="addit" data-addto-sec="${s.id}">${icon('plus', 16, 2.4)}<input enterkeyhint="done" maxlength="80" placeholder="Add item (e.g. Batteries x4)" aria-label="Add item to ${esc(s.name)}"></form>`;
+    }
+    h += '</div>';
+  }
+  h += `<p class="hintpin">${icon('pin', 13)}Tap an item to tick it · long-press to edit</p>`;
+  return h;
+}
+
+function findItem(t, ref) {
+  const [sid, iid] = ref.split(':');
+  const s = packOf(t).sections.find(x => x.id === sid);
+  return { s, i: s && s.items.find(x => x.id === iid) };
+}
+async function togglePackItem(t, ref) {
+  const { i } = findItem(t, ref); if (!i) return;
+  if (packMode(t) === 'home') i.home = !i.home; else { i.packed = !i.packed; if (!i.packed) i.home = false; }
+  await savePack(t); renderTrip(t.id);
+}
+async function toggleSection(t, sid) {
+  const s = packOf(t).sections.find(x => x.id === sid); if (!s) return;
+  s.collapsed = !s.collapsed; await savePack(t); renderTrip(t.id);
+}
+async function setPackMode(t, m) {
+  if (packMode(t) === m) return;
+  packOf(t).mode = m; await savePack(t); renderTrip(t.id);
+  if (m === 'home') toast('Return check: tick items as they go back in the bag');
+}
+async function resetReturn(t) {
+  if (!confirm('Clear all “back in the bag” ticks?')) return;
+  packOf(t).sections.forEach(s => s.items.forEach(i => { i.home = false; }));
+  await savePack(t); renderTrip(t.id);
+}
+function wirePackInputs(t) {
+  $$('form[data-addto-sec]', app).forEach(f => {
+    f.onsubmit = async e => {
+      e.preventDefault();
+      const inp = $('input', f), v = inp.value.trim(); if (!v) return;
+      const s = packOf(t).sections.find(x => x.id === f.dataset.addtoSec); if (!s) return;
+      s.items.push({ id: DB.uid(), ...parseItem(v), packed: false, home: false });
+      await savePack(t);
+      const sid = s.id;
+      await renderTrip(t.id);
+      const again = $(`form[data-addto-sec="${sid}"] input`, app); if (again) again.focus();   // keep typing the next item
+    };
+  });
+  // long-press an item to edit it
+  $$('.it[data-item]', app).forEach(b => {
+    let timer;
+    const start = () => { timer = setTimeout(() => { lastLongPress = Date.now(); openPackItemSheet(t, b.dataset.item); }, 550); };
+    const stop = () => clearTimeout(timer);
+    b.addEventListener('touchstart', start, { passive: true }); b.addEventListener('touchend', stop); b.addEventListener('touchmove', stop, { passive: true });
+    b.addEventListener('contextmenu', e => { e.preventDefault(); lastLongPress = Date.now(); openPackItemSheet(t, b.dataset.item); });
+  });
+}
+function openPackItemSheet(t, ref) {
+  const { s, i } = findItem(t, ref); if (!i) return;
+  openSheet(`<h3>Edit item · ${esc(s.name)}</h3>
+    <div class="two"><div style="flex:2"><label class="lbl" for="iText">Item</label><input class="input" id="iText" maxlength="80" value="${esc(i.text)}"></div>
+    <div><label class="lbl" for="iQty">Quantity</label><input class="input" id="iQty" type="number" min="0" max="999" inputmode="numeric" value="${i.qty || ''}" placeholder="–"></div></div>
+    <div class="actions"><button class="btn danger" id="iDel">${icon('trash-2', 17)}Delete</button><button class="btn primary" id="iSave">Save</button></div>`,
+  sheet => {
+    $('#iSave', sheet).onclick = async () => {
+      const v = $('#iText', sheet).value.trim(); if (!v) { toast('Type the item name'); return; }
+      i.text = v; i.qty = Math.max(0, parseInt($('#iQty', sheet).value, 10) || 0);
+      await savePack(t); await back(); renderTrip(t.id);
+    };
+    $('#iDel', sheet).onclick = async () => {
+      s.items = s.items.filter(x => x.id !== i.id); await savePack(t); await back(); toast('Item deleted'); renderTrip(t.id);
+    };
+  });
+}
+function openSectionSheet(t, sid) {
+  const c = packOf(t), s = sid ? c.sections.find(x => x.id === sid) : null;
+  if (sid && !s) return;
+  const idx = s ? c.sections.indexOf(s) : -1;
+  let key = s ? s.key : 'camera';
+  openSheet(`<h3>${s ? 'Section' : 'New section'} · ${esc(t.destination)}</h3>
+    <label class="lbl" for="sName">Section name</label><input class="input" id="sName" maxlength="40" placeholder="e.g. Camera gear" value="${esc(s ? s.name : '')}">
+    <span class="lbl">${s ? 'Icon' : 'Quick pick'}</span>
+    <div class="qp" id="sPick">${PACK_PRESETS.filter(p => p.k !== 'other' || s).map(p => `<button type="button" class="${p.k === key ? 'on' : ''}" data-k="${p.k}"><span class="dot" style="background:${p.c2}">${icon(p.ic, 12, 2.4)}</span>${p.name}</button>`).join('')}</div>
+    ${s ? `<div class="secacts"><button class="btn ghost" id="sUp" ${idx === 0 ? 'disabled' : ''}>↑ Move up</button><button class="btn ghost" id="sDown" ${idx === c.sections.length - 1 ? 'disabled' : ''}>↓ Move down</button></div>
+      <button class="btn ghost block" id="sUntick" style="margin-top:8px">${icon('rotate-ccw', 17)}Untick all items in this section</button>`
+      : `<button class="copyrow" id="sCopy">${icon('copy', 20)}<span><b>Copy sections from another trip</b>Re-use a packing list you made before</span></button>`}
+    <div class="actions">${s ? `<button class="btn danger" id="sDel">${icon('trash-2', 17)}Delete</button>` : '<button class="btn ghost" id="sCancel">Cancel</button>'}<button class="btn primary" id="sSave">${s ? 'Save' : 'Create section'}</button></div>`,
+  sheet => {
+    const name = $('#sName', sheet);
+    let typed = !!s;
+    $$('#sPick button', sheet).forEach(b => b.onclick = () => {
+      key = b.dataset.k; $$('#sPick button', sheet).forEach(x => x.classList.toggle('on', x === b));
+      if (!typed || !name.value.trim()) { name.value = presetOf(key).name; typed = false; }
+    });
+    name.oninput = () => { typed = true; if (!s) { const g = guessPreset(name.value); if (g !== 'other') { key = g; $$('#sPick button', sheet).forEach(x => x.classList.toggle('on', x.dataset.k === key)); } } };
+    if (!s) setTimeout(() => name.focus(), 250);
+    const cancel = $('#sCancel', sheet); if (cancel) cancel.onclick = () => back();
+    const cp = $('#sCopy', sheet); if (cp) cp.onclick = async () => { await back(); openCopyPackSheet(t); };
+    const mv = async dir => { const arr = c.sections; const j = idx + dir; [arr[idx], arr[j]] = [arr[j], arr[idx]]; await savePack(t); await back(); renderTrip(t.id); };
+    const up = $('#sUp', sheet); if (up) up.onclick = () => mv(-1);
+    const dn = $('#sDown', sheet); if (dn) dn.onclick = () => mv(1);
+    const un = $('#sUntick', sheet); if (un) un.onclick = async () => { s.items.forEach(i => { i.packed = false; i.home = false; }); await savePack(t); await back(); toast('Section unticked'); renderTrip(t.id); };
+    const del = $('#sDel', sheet);
+    if (del) del.onclick = async () => {
+      if (s.items.length && !confirm(`Delete “${s.name}” and its ${s.items.length} item${s.items.length > 1 ? 's' : ''}?`)) return;
+      c.sections = c.sections.filter(x => x.id !== s.id); await savePack(t); await back(); toast('Section deleted'); renderTrip(t.id);
+    };
+    $('#sSave', sheet).onclick = async () => {
+      const v = name.value.trim() || presetOf(key).name;
+      if (s) Object.assign(s, { name: v, key });
+      else c.sections.push({ id: DB.uid(), name: v, key, collapsed: false, items: [] });
+      await savePack(t); await back(); renderTrip(t.id);
+      if (!s) setTimeout(() => { const f = $$('form[data-addto-sec] input', app).pop(); if (f) f.focus(); }, 150);
+    };
+  });
+}
+async function openCopyPackSheet(t) {
+  const others = (await DB.allTrips()).filter(x => x.id !== t.id && x.carry && x.carry.sections && x.carry.sections.length)
+    .sort((x, y) => (y.start || '').localeCompare(x.start || ''));
+  if (!others.length) { toast('No other trip has a packing list yet'); return; }
+  openSheet(`<h3>Copy packing list</h3><p class="sub">Sections and items are copied unticked into ${esc(t.destination)}. Sections with the same name are merged.</p>
+    <div class="copylist">${others.map(o => { const n = o.carry.sections.reduce((a, s) => a + s.items.length, 0);
+      return `<button class="copypick" data-from="${o.id}"><span class="fl">${flag(o.country)}</span><span><b>${esc(o.destination)}</b><small>${o.carry.sections.length} sections · ${n} items · ${esc(shortRange(o))}</small></span>${icon('copy', 18)}</button>`; }).join('')}</div>`,
+  sheet => {
+    $$('.copypick', sheet).forEach(b => b.onclick = async () => {
+      const src = others.find(o => o.id === b.dataset.from); const c = packOf(t); let added = 0;
+      for (const ss of src.carry.sections) {
+        let dst = c.sections.find(x => x.name.toLowerCase() === ss.name.toLowerCase());
+        if (!dst) { dst = { id: DB.uid(), name: ss.name, key: ss.key, collapsed: false, items: [] }; c.sections.push(dst); }
+        for (const it of ss.items) {
+          if (dst.items.some(x => x.text.toLowerCase() === it.text.toLowerCase())) continue;
+          dst.items.push({ id: DB.uid(), text: it.text, qty: it.qty || 0, packed: false, home: false }); added++;
+        }
+      }
+      c.mode = 'going';
+      await savePack(t); await back(); toast(`✔ Copied ${added} items from ${src.destination}`); renderTrip(t.id);
+    });
+  });
 }
 
 /* ---------------- trip to-do list ---------------- */
@@ -735,7 +953,7 @@ function openTripSheet(trip) {
     if (isNew) { $('#tCancel', sheet).onclick = () => back(); setTimeout(() => $('#tDest', sheet).focus(), 250); }
     else $('#tDel', sheet).onclick = async () => {
       const cur = await DB.getTrip(t.id);
-      const n = (await DB.docsFor(t.id)).length + (cur.noteItems || []).length + (cur.todos || []).length;
+      const n = (await DB.docsFor(t.id)).length + (cur.noteItems || []).length + (cur.todos || []).length + packStats(cur).total;
       if (n) { alert(`This trip still has documents, notes or tasks.\n\nUse “End trip” to back them up as a zip first, then delete.`); return; }
       if (!confirm(`Delete the empty trip “${t.destination}”?`)) return;
       await DB.deleteTrip(t.id); await back(); toast('Trip deleted'); navigate('/', true);
@@ -768,9 +986,9 @@ async function openEndTrip(t) {
   const size = docs.reduce((s, d) => s + (d.size || 0), 0);
   const used = CATS.filter(c => docs.some(d => d.category === c.id));
   const name = ZipIO.backupName(t) + '.zip';
-  const nNotes = (t.noteItems || []).length, nTodo = (t.todos || []).length;
-  const keep = docs.length + nNotes + nTodo > 0;
-  const tree = keep ? used.map(c => `  ├ ${c.folder}/  (${docs.filter(d => d.category === c.id).length})`).join('\n') + (nTodo ? `\n  ├ ToDo.txt  (${nTodo})` : '') + (nNotes ? `\n  ├ Notes.txt  (${nNotes})` : '') + '\n  └ trip.json' : '';
+  const nNotes = (t.noteItems || []).length, nTodo = (t.todos || []).length, nPack = packStats(t).total;
+  const keep = docs.length + nNotes + nTodo + nPack > 0;
+  const tree = keep ? used.map(c => `  ├ ${c.folder}/  (${docs.filter(d => d.category === c.id).length})`).join('\n') + (nTodo ? `\n  ├ ToDo.txt  (${nTodo})` : '') + (nPack ? `\n  ├ Packing.txt  (${nPack})` : '') + (nNotes ? `\n  ├ Notes.txt  (${nNotes})` : '') + '\n  └ trip.json' : '';
   openSheet(`
     <h3>End trip · ${esc(t.destination)} ${flag(t.country)}</h3>
     <div class="summary"><div><b>${docs.length}</b><span>DOCS</span></div><div><b>${nTodo}</b><span>TASKS</span></div><div><b>${nNotes}</b><span>NOTES</span></div><div><b>${fmtSize(size)}</b><span>SIZE</span></div></div>

@@ -38,6 +38,11 @@ const ZipIO = {
         (x.remindAt ? `  (remind ${x.remindAt.replace('T', ' ')})` : '') +
         (x.details ? `\n    ${x.details}` : '')).join('\n') + '\n');
     }
+    const secs = (trip.carry && trip.carry.sections) || [];
+    if (secs.some(s => s.items.length)) {
+      root.file('Packing.txt', `Things to carry – ${trip.destination}\n` + secs.map(s => `\n${s.name.toUpperCase()}\n` +
+        s.items.map(i => `  ${i.packed ? '[x]' : '[ ]'} ${i.text}${i.qty ? ' ×' + i.qty : ''}`).join('\n')).join('\n') + '\n');
+    }
     const notes = trip.noteItems || [];
     if (notes.length) {
       root.file('Notes.txt', `Notes – ${trip.destination}\n\n` + notes.map(n =>
