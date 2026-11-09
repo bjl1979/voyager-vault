@@ -1,6 +1,6 @@
 /* Voyager Vault – offline travel document folders (all data stays on this device) */
 'use strict';
-const APP_VERSION = '1.0.5';
+const APP_VERSION = '2.0.0';
 
 const CATS = [
   { id: 'passport',  label: 'Passport / ID',  short: 'Passport',  folder: 'Passport_ID',  icon: '🛂' },
@@ -26,7 +26,11 @@ const NOTE_TOPICS = [
   { k: 'To do',      i: '✅', hint: 'e.g. Check in online 24 h before, print hotel voucher' },
 ];
 const topicIcon = k => (NOTE_TOPICS.find(n => n.k === k) || { i: '📝' }).i;
-const noteText = t => (t.noteItems || []).map(n => `${n.topic || ''} ${n.text}`).join(' ');
+const noteText = t => (t.noteItems || []).map(n => `${n.topic || ''} ${n.text}`).join(' ') + ' ' + (t.todos || []).map(x => `${x.title} ${x.details || ''}`).join(' ');
+const PRIO = { urgent: { label: 'Urgent', icon: '🔴' }, normal: { label: 'Normal', icon: '🔵' }, delayed: { label: 'Delayed', icon: '⏸' } };
+const openUrgent = t => (t.todos || []).filter(x => !x.done && x.priority === 'urgent').length;
+const collapsed = (() => { try { return JSON.parse(localStorage.getItem('vv-collapse') || '{}'); } catch { return {}; } })();
+function toggleCollapsed(k) { collapsed[k] = !collapsed[k]; store.set('vv-collapse', JSON.stringify(collapsed)); }
 
 const COUNTRIES = {
   Qatar:'QA', India:'IN', 'United Arab Emirates':'AE', 'Saudi Arabia':'SA', Oman:'OM', Bahrain:'BH', Kuwait:'KW',
@@ -199,8 +203,9 @@ async function makeThumb(blob, type) {
 const thumbHTML = d => d.thumb ? `<img src="${d.thumb}" alt="">` : (d.type === 'application/pdf' ? 'PDF' : 'FILE');
 
 /* ---------------- offline status ---------------- */
-const OFFLINE_FILES = 15;
+const OFFLINE_FILES = 17;
 async function offlineStatus() {
+  if (Native.isApp) return { supported: true, active: true, files: OFFLINE_FILES, shell: true, cache: 'built into the Android app', app: true };
   const st = { supported: 'serviceWorker' in navigator && 'caches' in window && location.protocol !== 'file:', active: false, files: 0, shell: false, cache: '' };
   if (!st.supported) return st;
   st.active = !!navigator.serviceWorker.controller;
@@ -307,7 +312,7 @@ function passCard(t, n) {
   return `<button class="pass ${st.key === 'done' ? 'done' : ''}" data-trip="${t.id}">
     <div class="main"><div class="dest">${flag(t.country)} ${esc(t.destination)}</div>${route}
       <div class="dates">${esc(dateRange(t))}</div>
-      <div class="tags">${st.tag}${t.purpose ? `<span class="tag blue">${esc(t.purpose)}</span>` : ''}</div></div>
+      <div class="tags">${st.tag}${openUrgent(t) ? `<span class="tag red">🔴 ${openUrgent(t)} urgent</span>` : ''}${t.purpose ? `<span class="tag blue">${esc(t.purpose)}</span>` : ''}</div></div>
     <div class="stub"><div class="n">${n}</div><div class="l">DOCS</div></div></button>`;
 }
 
@@ -337,16 +342,25 @@ async function renderTrip(id) {
     body += `<div class="section" style="color:var(--amber)">★ ESSENTIALS <b>tap to show</b></div><div class="ess">` +
       pinned.map(d => `<button class="tile" data-view="${d.id}"><div class="th">${d.thumb ? `<img src="${d.thumb}" alt="">` : cat(d.category).icon}</div><span>${esc(d.title)}</span></button>`).join('') + `</div>`;
   }
+  // ---- to-do ----
+  const todos = t.todos || [];
+  const openT = todos.filter(x => !x.done), nU = openT.filter(x => x.priority === 'urgent').length;
+  const tC = !!collapsed.todo;
+  const tSum = !todos.length ? '' : (nU ? `<span class="ubadge">${nU} urgent</span>` : '') + (openT.length - nU ? `<span class="csum">${openT.length - nU} more</span>` : '') + (!openT.length ? '<span class="csum">all done ✓</span>' : '');
+  body += `<div class="section sechead"><button class="collapse" data-collapse="todo" aria-expanded="${!tC}">${tC ? '▸' : '▾'} ✅ TO-DO ${tC ? tSum : ''}</button><button class="addlink" data-act="todo">＋ Add task</button></div>`;
+  if (!tC) body += todos.length ? todoListHTML(t) : `<button class="empty-note todo-empty" data-act="todo"><b>Things to do before you go</b><span>Buy SIM, print visa copy, exchange money… Mark urgent ones for red alarms.</span></button>`;
+  // ---- notes ----
   const notes = (t.noteItems || []).slice().sort((x, y) => (x.done - y.done) || (x.created - y.created));
-  body += `<div class="section">📝 NOTES <button class="addlink" data-act="note">＋ Add note</button></div>`;
-  body += notes.length
+  const nC = !!collapsed.notes;
+  body += `<div class="section sechead"><button class="collapse" data-collapse="notes" aria-expanded="${!nC}">${nC ? '▸' : '▾'} 📝 NOTES ${nC && notes.length ? `<span class="csum">${notes.length} note${notes.length > 1 ? 's' : ''}</span>` : ''}</button><button class="addlink" data-act="note">＋ Add note</button></div>`;
+  if (!nC) body += notes.length
     ? `<div class="notes-card">${notes.map(noteRow).join('')}</div>`
     : `<button class="empty-note" data-act="note"><b>Things to remember for this trip</b><span>SIM card to buy, currency, taxi app, emergency numbers, embassy…</span></button>`;
   if (!docs.length) {
     body += `<div class="empty"><div class="big">📂</div><h3>This trip folder is empty</h3>
       <p>Tap <b>📷 Scan</b> to photograph a document, or <b>＋ Add files</b> to pick PDFs and photos. Your passport, visa, tickets and hotel bookings all go here.</p></div>`;
   } else {
-    body += `<div class="section">FOLDERS <b>${docs.length} document${docs.length > 1 ? 's' : ''}</b></div>`;
+    body += `<div class="section">📁 FOLDERS <b>${docs.length} document${docs.length > 1 ? 's' : ''}</b></div>`;
     const full = CATS.filter(c => byCat[c.id]), emptyC = CATS.filter(c => !byCat[c.id]);
     body += full.map(c => {
       const open = exp.has(c.id);
@@ -384,7 +398,106 @@ async function renderTrip(id) {
     else if (d.act === 'note') openNoteSheet(t);
     else if (d.note) openNoteSheet(t, d.note);
     else if (d.ntog) toggleNote(t, d.ntog);
+    else if (d.collapse) { toggleCollapsed(d.collapse); renderTrip(id); }
+    else if (d.act === 'todo') openTodoSheet(t);
+    else if (d.todo) openTodoSheet(t, d.todo);
+    else if (d.ttog) toggleTodo(t, d.ttog);
+    else if (d.act === 'tdone') { showDoneTodos[t.id] = !showDoneTodos[t.id]; renderTrip(id); }
   };
+}
+
+/* ---------------- trip to-do list ---------------- */
+const showDoneTodos = {};
+function todoListHTML(t) {
+  const todos = t.todos || [];
+  const by = p => todos.filter(x => !x.done && x.priority === p).sort((a, b) => (a.remindAt || '9999').localeCompare(b.remindAt || '9999') || a.created - b.created);
+  const done = todos.filter(x => x.done).sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0));
+  const grp = (p, cls) => { const arr = by(p); return arr.length ? `<div class="grp ${cls}">${PRIO[p].icon} ${PRIO[p].label.toUpperCase()} · ${arr.length}</div>` + arr.map(x => todoRow(t, x)).join('') : ''; };
+  let h = grp('urgent', 'u') + grp('normal', 'n') + grp('delayed', 'd');
+  if (done.length) {
+    h += `<button class="grp c" data-act="tdone">✓ COMPLETED · ${done.length} ${showDoneTodos[t.id] ? '▾' : '▸'}</button>`;
+    if (showDoneTodos[t.id]) h += done.map(x => todoRow(t, x)).join('');
+  }
+  return `<div class="todo-list">${h}</div>`;
+}
+function todoRow(t, x) {
+  const desc = Reminders.describe(t, x, Date.now(), { quiet: Native.quiet() });
+  const late = !x.done && /overdue|ended/.test(desc);
+  return `<div class="task ${x.priority} ${x.done ? 'done' : ''}"><button class="tchk" data-ttog="${x.id}" aria-label="${x.done ? 'Mark not done' : 'Mark done'}">${x.done ? '✓' : ''}</button>
+    <button class="tbody" data-todo="${x.id}"><b>${esc(x.title)}</b>${x.details ? `<i>${esc(x.details)}</i>` : ''}<small class="${late ? 'late' : ''}">${esc(desc)}</small></button>
+    ${x.priority === 'urgent' && !x.done ? '<span class="flag">URGENT</span>' : ''}</div>`;
+}
+async function toggleTodo(t, id) {
+  const x = (t.todos || []).find(y => y.id === id); if (!x) return;
+  x.done = !x.done; x.doneAt = x.done ? Date.now() : null;
+  await DB.saveTrip(t); await Native.syncTrip(t);
+  if (x.done) toast(x.priority === 'urgent' ? '✓ Done · alarms stopped' : '✓ Done');
+  renderTrip(t.id);
+}
+function todoHint(t, prio, date, time) {
+  if (prio === 'delayed') return '⏸ Not important right now, so no reminders. It stays at the bottom of the list.';
+  const at = date ? Reminders.parseLocal(`${date}T${time || '09:00'}`) : null;
+  if (prio === 'normal') return at ? `🔵 One reminder on ${Reminders.fmt(at)}.` : '🔵 Pick a date and time to get a reminder, or leave it empty for no reminder.';
+  const lead = Reminders.leadStart(t);
+  const parts = [];
+  if (at) parts.push(`at ${Reminders.fmt(at)}`);
+  if (lead) parts.push(`from ${Reminders.fmt(lead)} (2 days before travel)`);
+  if (!parts.length) return '🔴 Urgent needs a time or trip dates. Add a reminder time so the alarm knows when to ring.';
+  return `🔴 Full-screen red alarm ${parts.join(' and ')}, repeating every 6 h until you tick it off.${Native.quiet() ? ' Night repeats (11 pm–6 am) wait until 6 am.' : ''}`;
+}
+function openTodoSheet(t, todoId) {
+  const x = todoId ? (t.todos || []).find(y => y.id === todoId) : null;
+  if (todoId && !x) return;
+  const p0 = x ? x.priority : 'normal';
+  const [d0, tm0] = x && x.remindAt ? x.remindAt.split('T') : ['', '09:00'];
+  openSheet(`
+    <h3>${x ? 'Edit task' : 'New task'} · ${esc(t.destination)}</h3>
+    <label class="lbl" for="kTitle">Task</label>
+    <input class="input" id="kTitle" maxlength="120" placeholder="e.g. Buy Singtel eSIM" value="${esc(x ? x.title : '')}">
+    <span class="lbl">Priority</span>
+    <div class="prio" id="kPrio">${Object.keys(PRIO).map(k => `<button type="button" class="${k} ${k === p0 ? 'on' : ''}" data-p="${k}">${PRIO[k].icon} ${PRIO[k].label}</button>`).join('')}</div>
+    <div id="kWhen"><span class="lbl">Remind me</span>
+      <div class="two"><input class="input" id="kDate" type="date" value="${esc(d0)}"><input class="input" id="kTime" type="time" value="${esc(tm0 || '09:00')}"></div></div>
+    <div class="hintbox" id="kHint"></div>
+    ${Native.isApp ? '' : '<p class="sub" style="margin-top:8px">🔔 Alarms ring only in the Voyager Vault <b>Android app</b>. Here the task is saved without alarms.</p>'}
+    <label class="lbl" for="kDetails">Details (optional)</label>
+    <textarea class="input" id="kDetails" rows="2" maxlength="1000" placeholder="Where, how much, anything to remember">${esc(x ? x.details || '' : '')}</textarea>
+    <div class="actions">${x ? '<button class="btn danger" id="kDel">🗑 Delete</button>' : '<button class="btn ghost" id="kCancel">Cancel</button>'}<button class="btn primary" id="kSave">Save task</button></div>`,
+  sheet => {
+    let prio = p0;
+    const paint = () => {
+      $$('#kPrio button', sheet).forEach(b => b.classList.toggle('on', b.dataset.p === prio));
+      $('#kWhen', sheet).classList.toggle('hidden', prio === 'delayed');
+      const h = $('#kHint', sheet); h.className = 'hintbox ' + prio;
+      h.textContent = todoHint(t, prio, $('#kDate', sheet).value, $('#kTime', sheet).value);
+    };
+    $$('#kPrio button', sheet).forEach(b => b.onclick = () => { prio = b.dataset.p; paint(); });
+    $('#kDate', sheet).oninput = paint; $('#kTime', sheet).oninput = paint;
+    paint();
+    if (!x) setTimeout(() => $('#kTitle', sheet).focus(), 250);
+    const c = $('#kCancel', sheet); if (c) c.onclick = () => back();
+    const del = $('#kDel', sheet);
+    if (del) del.onclick = async () => {
+      if (!confirm('Delete this task?')) return;
+      t.todos = t.todos.filter(y => y.id !== x.id);
+      await DB.saveTrip(t); await Native.syncTrip(t); await back(); toast('Task deleted'); renderTrip(t.id);
+    };
+    $('#kSave', sheet).onclick = async () => {
+      const title = $('#kTitle', sheet).value.trim();
+      if (!title) { $('#kTitle', sheet).focus(); toast('Type the task first'); return; }
+      const date = $('#kDate', sheet).value, time = $('#kTime', sheet).value || '09:00';
+      const remindAt = prio !== 'delayed' && date ? `${date}T${time}` : '';
+      if (prio === 'urgent' && !remindAt && !t.start) { toast('Urgent needs a reminder time (this trip has no dates)', 4000); return; }
+      const rec = { title, priority: prio, remindAt, details: $('#kDetails', sheet).value.trim() };
+      t.todos = t.todos || [];
+      if (x) Object.assign(x, rec, { edited: Date.now() });
+      else t.todos.push({ id: DB.uid(), ...rec, done: false, doneAt: null, created: Date.now() });
+      collapsed.todo = false; store.set('vv-collapse', JSON.stringify(collapsed));
+      await DB.saveTrip(t); protectStorage(); await Native.syncTrip(t);
+      await back(); toast(Native.isApp && prio !== 'delayed' && (remindAt || prio === 'urgent') ? 'Task saved · reminder set ✔' : 'Task saved'); renderTrip(t.id);
+      if (Native.isApp && prio !== 'delayed' && (remindAt || prio === 'urgent')) maybeReminderSetup();
+    };
+  });
 }
 
 function noteRow(n) {
@@ -562,8 +675,9 @@ function openTripSheet(trip) {
     $('#tStart', sheet).onchange = e => { const end = $('#tEnd', sheet); if (!end.value || end.value < e.target.value) end.value = e.target.value; };
     if (isNew) { $('#tCancel', sheet).onclick = () => back(); setTimeout(() => $('#tDest', sheet).focus(), 250); }
     else $('#tDel', sheet).onclick = async () => {
-      const n = (await DB.docsFor(t.id)).length + ((await DB.getTrip(t.id)).noteItems || []).length;
-      if (n) { alert(`This trip still has documents or notes.\n\nUse “End trip” to back them up as a zip first, then delete.`); return; }
+      const cur = await DB.getTrip(t.id);
+      const n = (await DB.docsFor(t.id)).length + (cur.noteItems || []).length + (cur.todos || []).length;
+      if (n) { alert(`This trip still has documents, notes or tasks.\n\nUse “End trip” to back them up as a zip first, then delete.`); return; }
       if (!confirm(`Delete the empty trip “${t.destination}”?`)) return;
       await DB.deleteTrip(t.id); await back(); toast('Trip deleted'); navigate('/', true);
     };
@@ -574,7 +688,7 @@ function openTripSheet(trip) {
       if (start && end && end < start) { toast('End date is before the start date'); return; }
       const rec = { ...t, id: t.id || DB.uid(), created: t.created || Date.now(), destination: dest, country: $('#tCountry', sheet).value.trim(),
         from: $('#tFrom', sheet).value.trim().toUpperCase(), to: $('#tTo', sheet).value.trim().toUpperCase(), start, end: end || start, purpose };
-      await DB.saveTrip(rec);
+      await DB.saveTrip(rec); await Native.syncTrip(rec);
       await back();
       if (isNew) { toast(`📁 ${dest} folder created`); navigate('/trip/' + rec.id); }
       else { toast('Trip updated ✔'); renderTrip(rec.id); }
@@ -583,7 +697,8 @@ function openTripSheet(trip) {
 }
 
 /* ---------------- end trip: back up, then delete ---------------- */
-function downloadFile(file) {
+async function downloadFile(file) {
+  if (Native.isApp) return Native.saveFile(file);
   const url = URL.createObjectURL(file);
   const a = document.createElement('a'); a.href = url; a.download = file.name; document.body.append(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60000);
@@ -594,20 +709,20 @@ async function openEndTrip(t) {
   const size = docs.reduce((s, d) => s + (d.size || 0), 0);
   const used = CATS.filter(c => docs.some(d => d.category === c.id));
   const name = ZipIO.backupName(t) + '.zip';
-  const nNotes = (t.noteItems || []).length;
-  const keep = docs.length + nNotes > 0;
-  const tree = keep ? used.map(c => `  ├ ${c.folder}/  (${docs.filter(d => d.category === c.id).length})`).join('\n') + (nNotes ? `\n  ├ Notes.txt  (${nNotes})` : '') + '\n  └ trip.json' : '';
+  const nNotes = (t.noteItems || []).length, nTodo = (t.todos || []).length;
+  const keep = docs.length + nNotes + nTodo > 0;
+  const tree = keep ? used.map(c => `  ├ ${c.folder}/  (${docs.filter(d => d.category === c.id).length})`).join('\n') + (nTodo ? `\n  ├ ToDo.txt  (${nTodo})` : '') + (nNotes ? `\n  ├ Notes.txt  (${nNotes})` : '') + '\n  └ trip.json' : '';
   openSheet(`
     <h3>End trip · ${esc(t.destination)} ${flag(t.country)}</h3>
-    <div class="summary"><div><b>${docs.length}</b><span>DOCS</span></div><div><b>${nNotes}</b><span>NOTES</span></div><div><b>${fmtSize(size)}</b><span>SIZE</span></div></div>
+    <div class="summary"><div><b>${docs.length}</b><span>DOCS</span></div><div><b>${nTodo}</b><span>TASKS</span></div><div><b>${nNotes}</b><span>NOTES</span></div><div><b>${fmtSize(size)}</b><span>SIZE</span></div></div>
     ${keep ? `
     <div class="step" id="s1">
       <div class="sh"><div class="num" id="n1">1</div><b>Back up trip folder</b></div>
       <div class="zipline mono">📦 ${esc(name)}\n${esc(tree)}</div>
       <div class="check hidden" id="ok1"></div>
       <button class="btn primary" id="bBackup">⤓ Back up &amp; save zip</button>
-      <div style="margin-left:36px;margin-top:6px"><button class="linkbtn" id="bDl">or save straight to Downloads</button></div>
-    </div>` : '<p class="sub">This trip has no documents or notes, so there is nothing to back up.</p>'}
+      <div style="margin-left:36px;margin-top:6px"><button class="linkbtn" id="bDl">${Native.isApp ? 'or share it (WhatsApp, Gmail, Drive…)' : 'or save straight to Downloads'}</button></div>
+    </div>` : '<p class="sub">This trip has no documents, tasks or notes, so there is nothing to back up.</p>'}
     <div class="step ${keep ? 'locked' : ''}" id="s2">
       <div class="sh"><div class="num" id="n2">${keep ? 2 : 1}</div><b>Delete from phone</b></div>
       <p>${keep ? `Frees ${fmtSize(size)}. You can restore it any time from the zip (Settings › Restore).` : 'Removes this empty trip folder.'}</p>
@@ -630,19 +745,28 @@ async function openEndTrip(t) {
       $('#bBackup', sheet).onclick = async e => {
         let file;
         try { file = await build(e.currentTarget); } catch (err) { toast('Backup failed: ' + err.message, 4000); return; }
+        if (Native.isApp) {
+          try { if (await Native.saveFile(file)) unlock(`Saved as ${file.name}`); else toast('Backup not saved. Nothing was deleted.'); }
+          catch (err) { toast('Could not save: ' + err.message, 4000); }
+          return;
+        }
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           try { await navigator.share({ files: [file], title: `${t.destination} trip backup` }); unlock('Backup handed to your phone. Check it is saved in Files / Drive.'); }
           catch (err) { if (err.name === 'AbortError') toast('Backup not saved. Nothing was deleted.'); else { downloadFile(file); unlock(`Saved to Downloads as ${file.name}`); } }
         } else { downloadFile(file); unlock(`Saved to Downloads as ${file.name}`); }
       };
       $('#bDl', sheet).onclick = async () => {
-        try { const file = await build($('#bBackup', sheet)); downloadFile(file); unlock(`Saved to Downloads as ${file.name}`); }
+        try {
+          const file = await build($('#bBackup', sheet));
+          if (Native.isApp) { await Native.shareFile(file, `${t.destination} trip backup`); unlock('Backup shared. Check it arrived (WhatsApp / Drive / email).'); }
+          else { downloadFile(file); unlock(`Saved to Downloads as ${file.name}`); }
+        }
         catch (err) { toast('Backup failed: ' + err.message, 4000); }
       };
     }
     $('#bDelete', sheet).onclick = async () => {
-      if (keep && !confirm(`Delete “${t.destination}” with its ${docs.length} document${docs.length === 1 ? '' : 's'} and ${nNotes} note${nNotes === 1 ? '' : 's'} from this phone?\n\nMake sure the backup zip is saved first.`)) return;
-      await DB.deleteTrip(t.id);
+      if (keep && !confirm(`Delete “${t.destination}” with its ${docs.length} document${docs.length === 1 ? '' : 's'}, ${nTodo} task${nTodo === 1 ? '' : 's'} and ${nNotes} note${nNotes === 1 ? '' : 's'} from this phone?\n\nMake sure the backup zip is saved first.`)) return;
+      await DB.deleteTrip(t.id); await Native.clearTrip(t.id);
       delete expanded[t.id];
       await back(); navigate('/', true);
       toast(`${t.destination} removed from phone${keep ? ' · backup zip keeps everything' : ''}`, 3500);
@@ -655,6 +779,7 @@ async function openEndTrip(t) {
 let wakeLock = null, viewerOpen = false;
 async function keepAwake(on) {
   try {
+    if (Native.isApp) return await Native.keepAwake(on);
     if (on && 'wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); return true; }
     if (!on && wakeLock) { await wakeLock.release(); wakeLock = null; }
   } catch {}
@@ -685,7 +810,7 @@ async function openViewer(docId) {
     ${d.ref ? `<div class="vref">${esc(cat(d.category).short === 'Flights' ? 'PNR' : 'Ref')}<span>${esc(d.ref)}</span></div>` : ''}
     <div class="vbody" id="vb"><div class="msg"><span class="spin"></span></div></div>
     <div class="vbot"><div class="g">${isPdf ? '<button id="vprev" aria-label="Previous page">◀</button><span id="vpage">1 / 1</span><button id="vnext" aria-label="Next page">▶</button>' : `<span>${fmtSize(d.size || 0)}</span>`}</div>
-      <div class="g">${isImg || isPdf ? '<button id="vrot" aria-label="Rotate 90 degrees" title="Rotate">⟳</button>' : ''}<button id="vout" aria-label="Zoom out">−</button><button id="vin" aria-label="Zoom in">＋</button>${navigator.share ? '<button id="vshare" aria-label="Share">⇪</button>' : ''}</div></div>`;
+      <div class="g">${isImg || isPdf ? '<button id="vrot" aria-label="Rotate 90 degrees" title="Rotate">⟳</button>' : ''}<button id="vout" aria-label="Zoom out">−</button><button id="vin" aria-label="Zoom in">＋</button>${navigator.share || Native.isApp ? '<button id="vshare" aria-label="Share">⇪</button>' : ''}</div></div>`;
   layer.append(v);
   viewerOpen = true;
   let url, pdf, page = 1, zoom = 1, token = 0, rot = (d.rotation || 0) % 360;
@@ -710,7 +835,10 @@ async function openViewer(docId) {
   };
   const sh = $('#vshare', v);
   if (sh) sh.onclick = async () => {
-    try { await navigator.share({ files: [new File([d.blob], d.fileName || d.title, { type: d.type })], title: d.title }); }
+    try {
+      const f = new File([d.blob], d.fileName || d.title, { type: d.type });
+      if (Native.isApp) await Native.shareFile(f, d.title); else await navigator.share({ files: [f], title: d.title });
+    }
     catch (e) { if (e.name !== 'AbortError') toast('Sharing not available for this file'); }
   };
 
@@ -786,23 +914,36 @@ async function openSettings() {
   const theme = document.documentElement.dataset.theme;
   const off = await offlineStatus();
   const tick = b => b ? '✅' : '❌';
+  const rs = await Native.status();
+  const nTasks = trips.reduce((s, t) => s + (t.todos || []).filter(x => !x.done && x.priority !== 'delayed').length, 0);
   openSheet(`
     <h3>Settings</h3>
     <div class="setrow"><h4>📱 Storage on this phone</h4>
       <p style="color:var(--text);font-size:14px"><b>Your documents: ${fmtSize(docBytes)}</b> · ${allDocs.length} file${allDocs.length === 1 ? '' : 's'} in ${trips.length} trip${trips.length === 1 ? '' : 's'}</p>
       <div class="meter" style="margin-top:8px"><i style="width:${pct}%"></i></div>
       ${est.quota ? `<p style="margin-top:6px;font-size:11.5px">Space the phone allows this app: up to ${fmtSize(est.quota)}. The browser's own estimate for this website is ${fmtSize(est.usage || 0)}${parts ? ` (${parts})` : ''}. This includes browser overhead, and is not your files.</p>` : ''}
-      <p style="margin-top:8px">${persisted ? '🔒 Protected: the phone will not clear your documents to free space.' : '⚠️ Not yet protected. Install the app to your home screen, then tap below.'}</p>
-      ${persisted ? '' : '<button class="btn ghost block" id="sPersist">Protect my documents</button>'}
+      ${Native.isApp ? '<p style="margin-top:8px">🔒 Stored inside the Voyager Vault app. Only uninstalling the app or clearing its data removes them, so back up first.</p>'
+        : `<p style="margin-top:8px">${persisted ? '🔒 Protected: the phone will not clear your documents to free space.' : '⚠️ Not yet protected. Install the app to your home screen, then tap below.'}</p>
+      ${persisted ? '' : '<button class="btn ghost block" id="sPersist">Protect my documents</button>'}`}
+    </div>
+    <div class="setrow"><h4>🔔 Reminders &amp; alarms</h4>
+      ${Native.isApp ? `<p>${nTasks} open task${nTasks === 1 ? '' : 's'} with reminders.</p>${reminderChecklist(rs)}
+        <button type="button" class="toggle ${Native.quiet() ? 'on' : ''}" id="sQuiet"><span class="sw"></span>Quiet hours 11 pm–6 am (urgent repeats wait until 6 am)</button>
+        <button class="btn ghost block" id="sTest">🔴 Test: ring an urgent alarm in 10 seconds</button>`
+      : `<p>Alarms ring only in the Voyager Vault <b>Android app</b>. Tasks you add here are saved, but this website cannot ring alarms while it is closed.</p>
+        <a class="btn primary block" style="margin-top:10px;text-decoration:none" href="downloads/VoyagerVault.apk" download>⬇ Get the Android app (APK)</a>
+        <p style="margin-top:8px;font-size:11.5px">Before switching: tap <b>Back up all trips</b> below, then restore that zip inside the Android app.</p>`}
     </div>
     <div class="setrow"><h4>✈️ Offline check</h4>
       <p>${tick(off.active)} Offline engine running in this app<br>${tick(off.shell)} App page saved<br>${tick(off.files >= OFFLINE_FILES)} App files saved (${off.files}/${OFFLINE_FILES})<br>
       ${isOfflineReady(off) ? '<b style="color:var(--green)">Ready: this app opens in airplane mode.</b>' : '<b style="color:var(--amber)">Not ready yet. Keep internet on, close the app fully and reopen it, then check again.</b>'}</p>
-      <p style="font-size:11px;margin-top:6px">${esc(off.cache || 'no cache')} · ${esc(location.pathname + location.search)} · ${standalone ? 'installed app' : 'browser tab'}</p></div>
-    <div class="setrow"><h4>♻️ Restore a trip backup</h4><p>Pick a Voyager Vault .zip (made with “End trip”) to bring that trip folder back.</p>
+      <p style="font-size:11px;margin-top:6px">${esc(off.cache || 'no cache')} · ${esc(location.pathname + location.search)} · ${off.app ? 'Android app' : standalone ? 'installed app' : 'browser tab'}</p></div>
+    <div class="setrow"><h4>📦 Back up all trips</h4><p>One zip with every trip: documents, tasks and notes. Use it to move everything to a new phone or into the Android app.</p>
+      <button class="btn ghost block" id="sBackupAll" ${trips.length ? '' : 'disabled'}>⤓ Back up all ${trips.length} trip${trips.length === 1 ? '' : 's'}</button></div>
+    <div class="setrow"><h4>♻️ Restore a backup</h4><p>Pick a Voyager Vault .zip (from “End trip” or “Back up all trips”) to bring the trips back.</p>
       <button class="btn primary block" id="sRestore">Choose backup zip</button></div>
     <div class="setrow"><h4>🎨 Theme</h4><div class="seg"><button data-th="dark" class="${theme === 'dark' ? 'on' : ''}">Ocean night</button><button data-th="light" class="${theme === 'light' ? 'on' : ''}">Sky day</button></div></div>
-    ${standalone ? '' : `<div class="setrow"><h4>⬇️ Install on this phone</h4>${installEvt ? '<button class="btn primary block" id="sInstall" style="margin:4px 0 10px">⬇ Install Voyager Vault</button>' : ''}<p>${ios
+    ${standalone || Native.isApp ? '' : `<div class="setrow"><h4>⬇️ Install on this phone</h4>${installEvt ? '<button class="btn primary block" id="sInstall" style="margin:4px 0 10px">⬇ Install Voyager Vault</button>' : ''}<p>${ios
       ? 'In Safari tap <b>Share</b> (square with arrow), then <b>Add to Home Screen</b>. Open Voyager Vault from the home screen icon from now on.'
       : 'In Chrome tap <b>⋮</b>, then <b>Add to Home screen</b> / <b>Install app</b>. Open Voyager Vault from the home screen icon from now on.'}</p></div>`}
     <div class="setrow"><h4>🛡️ Privacy</h4><p>Your documents are stored only on this phone. No account, no cloud and no tracking, and the app works in airplane mode. Back up a trip with “End trip” before deleting it or changing phones.</p></div>
@@ -815,6 +956,22 @@ async function openSettings() {
       if (ok) { await back(); openSettings(); }
     };
     const si = $('#sInstall', sheet); if (si) si.onclick = async () => { await back(); installApp(); };
+    wireReminderChecklist(sheet, () => { back().then(openSettings); });
+    const q = $('#sQuiet', sheet);
+    if (q) q.onclick = async () => { q.classList.toggle('on'); Native.setQuiet(q.classList.contains('on')); await Native.syncAll(); toast(Native.quiet() ? 'Quiet hours on' : 'Quiet hours off: urgent alarms ring at night too'); };
+    const ts = $('#sTest', sheet);
+    if (ts) ts.onclick = async () => { await Native.testAlarm('urgent', 10); toast('Test alarm in 10 seconds. Lock the phone to see the full-screen alarm.', 6000); };
+    $('#sBackupAll', sheet).onclick = async e => {
+      const btn = e.currentTarget, label = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Packing all trips…';
+      try {
+        const all = await DB.allTrips(), docsBy = {};
+        for (const tr of all) docsBy[tr.id] = await DB.docsFor(tr.id);
+        const file = await ZipIO.buildAll(all, docsBy, CATS);
+        if (Native.isApp) { if (await Native.saveFile(file)) toast(`✔ Saved ${file.name}`, 4000); }
+        else { await downloadFile(file); toast(`✔ Saved to Downloads as ${file.name}`, 4000); }
+      } catch (err) { toast('Backup failed: ' + err.message, 4000); }
+      finally { btn.disabled = false; btn.innerHTML = label; }
+    };
     $('#sRestore', sheet).onclick = () => { const i = $('#pickZip'); i.value = ''; i.click(); };
     $$('.seg button', sheet).forEach(b => b.onclick = () => {
       applyTheme(b.dataset.th); store.set('vv-theme', b.dataset.th);
@@ -827,18 +984,60 @@ $('#pickZip').addEventListener('change', async e => {
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
   toast('Restoring backup…', 10000);
   try {
-    const { trip, docs } = await ZipIO.readBackup(f);
-    const clash = await DB.getTrip(trip.id);
-    const newTripId = clash ? DB.uid() : trip.id;
+    const items = await ZipIO.readBackup(f);
     const existingIds = new Set((await DB.allDocsMeta()).map(d => d.id));
-    await DB.saveTrip({ ...trip, id: newTripId });
-    for (const d of docs) await DB.saveDoc({ ...d, id: existingIds.has(d.id) || clash ? DB.uid() : d.id, tripId: newTripId });
+    let lastId = null, nDocs = 0;
+    for (const { trip, docs } of items) {
+      const clash = await DB.getTrip(trip.id);
+      const newTripId = clash ? DB.uid() : trip.id;
+      const rec = { ...trip, id: newTripId };
+      await DB.saveTrip(rec);
+      for (const d of docs) await DB.saveDoc({ ...d, id: existingIds.has(d.id) || clash ? DB.uid() : d.id, tripId: newTripId });
+      await Native.syncTrip(rec);
+      lastId = newTripId; nDocs += docs.length;
+    }
     protectStorage();
     while (overlays.length) await back();
-    toast(`✔ ${trip.destination} restored · ${docs.length} documents`, 3500);
-    navigate('/trip/' + newTripId);
+    if (items.length === 1) { toast(`✔ ${items[0].trip.destination} restored · ${nDocs} documents`, 3500); navigate('/trip/' + lastId); }
+    else { toast(`✔ ${items.length} trips restored · ${nDocs} documents`, 3500); navigate('/'); }
   } catch (err) { console.error(err); toast(err.message || 'Could not read this backup', 4500); }
 });
+
+/* ---------------- Android alarm permissions ---------------- */
+const REM_STEPS = [
+  { k: 'notifications', label: 'Notifications allowed', why: 'needed for every reminder' },
+  { k: 'exact', label: 'Exact alarms allowed', why: 'so alarms ring on time' },
+  { k: 'fullScreen', label: 'Full-screen alarms allowed', why: 'the red urgent screen' },
+  { k: 'battery', label: 'Battery: Unrestricted', why: 'stops Samsung putting the app to sleep' },
+  { k: 'overlay', label: 'Show over other apps (optional)', why: 'red alarm even while you use the phone' },
+];
+function reminderChecklist(rs) {
+  if (!rs) return '';
+  return `<div class="checklist">${REM_STEPS.map(s => `<div class="ck"><span>${rs[s.k] ? '✅' : s.k === 'overlay' ? '➖' : '❌'}</span><div><b>${s.label}</b><small>${s.why}</small></div>${rs[s.k] ? '' : `<button class="fixbtn" data-fix="${s.k}">Allow</button>`}</div>`).join('')}</div>`;
+}
+function wireReminderChecklist(sheet, refresh) {
+  $$('[data-fix]', sheet).forEach(b => b.onclick = async () => {
+    await Native.openSetting(b.dataset.fix);
+    // settings screens return to the app; re-check when we come back
+    const again = () => { document.removeEventListener('visibilitychange', again); if (document.visibilityState === 'visible') refresh(); };
+    document.addEventListener('visibilitychange', again);
+    if (b.dataset.fix === 'notifications') setTimeout(refresh, 1500);
+  });
+}
+let setupShown = false;
+async function maybeReminderSetup() {
+  if (setupShown) return;
+  const rs = await Native.status(); if (!rs) return;
+  if (rs.notifications && rs.exact && rs.fullScreen && rs.battery) return;
+  setupShown = true;
+  const show = async () => {
+    const cur = await Native.status();
+    openSheet(`<h3>🔔 Set up alarms</h3><p class="sub">Android needs a few permissions so reminders ring on time, even when Voyager Vault is closed and the phone is locked. Tap <b>Allow</b> on each red item.</p>
+      ${reminderChecklist(cur)}<div class="actions"><button class="btn primary" id="rsDone">Done</button></div>`,
+    sheet => { wireReminderChecklist(sheet, () => { back().then(show); }); $('#rsDone', sheet).onclick = () => back(); });
+  };
+  show();
+}
 
 /* ---------------- install prompt (Android Chrome / Samsung Internet) ---------------- */
 let installEvt = null;
@@ -859,7 +1058,25 @@ async function installApp() {
 }
 
 /* ---------------- boot ---------------- */
-if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+async function nativeRefresh() {
+  const n = await Native.pullDone();
+  await Native.syncAll();
+  const goTo = await Native.launchTrip();
+  if (goTo && (await DB.getTrip(goTo))) { while (overlays.length) await back(); navigate('/trip/' + goTo); }
+  else if (n) render();
+  if (n) toast(`✓ ${n} task${n > 1 ? 's' : ''} marked done from the alarm`);
+}
+if (Native.isApp) {
+  document.documentElement.classList.add('native');
+  Native.initBackButton(() => {
+    if (overlays.length || (location.hash && location.hash !== '#/')) { history.back(); return true; }
+    return false;
+  });
+  Native.onResume(nativeRefresh);
+  Native.onChanged(nativeRefresh);
+  nativeRefresh();
+}
+if (!Native.isApp && 'serviceWorker' in navigator && location.protocol !== 'file:') {
   navigator.serviceWorker.register('sw.js').then(reg => {
     const done = () => setTimeout(paintOfflinePill, 300);
     navigator.serviceWorker.ready.then(done);

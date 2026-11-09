@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Voyager Vault</string>
+    <string name="title_activity_main">Voyager Vault</string>
+    <string name="package_name">com.bjl1979.voyagervault</string>
+    <string name="custom_url_scheme">com.bjl1979.voyagervault</string>
+</resources>

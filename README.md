@@ -15,6 +15,31 @@ Keep your passport copy, visa, flight tickets, hotel bookings and insurance in a
 - **Restore** any backup zip later from Settings.
 - Works offline, has no account or cloud, and does no tracking. The Ocean-night and Sky-day themes are included.
 
+## 📱 Android app (v2.0) – To-Do with alarm reminders
+The Android app is the full Voyager Vault **plus a To-Do list in every trip, with real alarms** that ring even when the app is closed and the phone is in airplane mode.
+
+| Priority | Reminder |
+|---|---|
+| 🔴 **Urgent** | Full-screen **red alarm** at the time you set **and** from 2 days before the trip (09:00), repeating **every 6 hours until you tap DONE**. Night repeats (11 pm–6 am) wait until 6 am (switch off in Settings). |
+| 🔵 **Normal** | One notification at the time you set. |
+| ⏸ **Delayed** | Not important right now, so no reminders. |
+
+**Download:** [VoyagerVault.apk](downloads/VoyagerVault.apk) (also in ⚙ Settings on the website).
+
+**Moving from the web app:** website ⚙ Settings ▸ **Back up all trips** ▸ install the APK ▸ in the app ⚙ Settings ▸ **Restore a backup**.
+
+**Installing on a Samsung:** Settings ▸ Security and privacy ▸ **Auto Blocker off** (just for the install) ▸ open the APK ▸ Install (tap *Install anyway* if Play Protect asks) ▸ turn Auto Blocker back on. On first urgent task the app walks you through allowing notifications, full-screen alarms and unrestricted battery.
+
+**Signing key:** every update must be signed with the same key (`voyager-vault-release.jks` + `keystore.properties`, kept privately by the owner, never committed). Without it, an update can only be installed by uninstalling first, which deletes the app's data.
+
+### Building the APK
+```
+npm install
+npm run sync                      # copies the web files into the Android project
+cd android && gradle assembleRelease
+```
+Needs JDK 21 and the Android SDK (platform 35). Place `keystore.properties` and the `.jks` in `android/` for a signed build.
+
 ## Install on your phone
 Open the app link once **with internet**, then:
 

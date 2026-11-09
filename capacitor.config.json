@@ -1,0 +1,9 @@
+{
+  "appId": "com.bjl1979.voyagervault",
+  "appName": "Voyager Vault",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#081a33",
+    "adjustMarginsForEdgeToEdge": "auto"
+  }
+}

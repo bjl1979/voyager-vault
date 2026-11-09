@@ -223,3 +223,51 @@ input[type=date].input{min-width:0;-webkit-appearance:none;appearance:none;min-h
 .empty-note{display:block;width:100%;text-align:left;background:var(--surface);border:1.5px dashed var(--ghost-line);border-radius:14px;padding:14px}
 .empty-note b{display:block;font-size:14.5px;margin-bottom:3px}
 .empty-note span{font-size:12.5px;color:var(--muted);line-height:1.45}
+
+/* ---------- collapsible sections ---------- */
+.sechead .collapse{display:flex;align-items:center;gap:7px;color:inherit!important;font-size:11px!important;letter-spacing:1.6px!important;font-weight:800!important;padding:4px 0}
+.csum{font-size:10.5px;letter-spacing:.3px;color:var(--muted);font-weight:700;margin-left:2px}
+.ubadge{font-size:10px;letter-spacing:.4px;font-weight:900;background:#D62839;color:#fff;padding:3px 8px;border-radius:10px}
+.tag.red{background:#ffd6da;color:#B01E2E}
+
+/* ---------- to-do ---------- */
+.todo-list{display:flex;flex-direction:column}
+.grp{font-size:10.5px;letter-spacing:1.4px;font-weight:800;margin:10px 4px 6px;display:flex;align-items:center;gap:6px;text-align:left}
+.grp.u{color:#ff6b7a}.grp.n{color:var(--sky)}.grp.d,.grp.c{color:var(--muted)}
+:root[data-theme="light"] .grp.u{color:#C21F31}:root[data-theme="light"] .grp.n{color:var(--azure)}
+.task{display:flex;gap:11px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:10px 11px;margin-bottom:7px}
+.task.urgent:not(.done){border-color:rgba(214,40,57,.6);background:linear-gradient(90deg,rgba(214,40,57,.24),rgba(214,40,57,.06));border-left:4px solid #D62839}
+:root[data-theme="light"] .task.urgent:not(.done){background:linear-gradient(90deg,#ffe3e6,#fff)}
+.task.delayed:not(.done){opacity:.6}
+.task.done{opacity:.5}
+.tchk{width:26px;height:26px;border-radius:50%;border:2px solid var(--sky);flex:none;margin-top:1px;color:#05331f;font-weight:900;font-size:14px;display:grid;place-items:center}
+.task.urgent:not(.done) .tchk{border-color:#ff6b7a}
+.task.delayed .tchk{border-color:var(--muted)}
+.task.done .tchk{background:var(--green);border-color:var(--green)}
+.tbody{flex:1;min-width:0;text-align:left;color:var(--text)}
+.tbody b{display:block;font-size:14.5px;font-weight:700;line-height:1.3}
+.task.done .tbody b{text-decoration:line-through}
+.tbody i{display:block;font-style:normal;font-size:12.5px;color:var(--muted);margin-top:2px;white-space:pre-wrap;word-break:break-word}
+.tbody small{display:block;font-size:11.5px;color:var(--sky);margin-top:3px}
+:root[data-theme="light"] .tbody small{color:var(--azure)}
+.task.urgent:not(.done) .tbody small{color:#ffb3bb}
+:root[data-theme="light"] .task.urgent:not(.done) .tbody small{color:#B01E2E}
+.tbody small.late{color:var(--amber)!important}
+.flag{font-size:9.5px;font-weight:900;padding:3px 7px;border-radius:8px;background:#D62839;color:#fff;letter-spacing:.6px;align-self:center;flex:none}
+.todo-empty{border-color:rgba(214,40,57,.45)}
+.prio{display:flex;gap:7px}
+.prio button{flex:1;text-align:center;padding:11px 0;border-radius:12px;font-size:13px;font-weight:800;border:1px solid var(--line);background:var(--field);color:var(--text2)}
+.prio .urgent.on{background:#D62839;border-color:#ff6b7a;color:#fff}
+.prio .normal.on{background:var(--azure);border-color:var(--azure2);color:#fff}
+.prio .delayed.on{background:#5b6f88;border-color:#8FA9CC;color:#fff}
+.hintbox{margin-top:12px;font-size:12.5px;line-height:1.5;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--field);color:var(--text2)}
+.hintbox.urgent{background:rgba(214,40,57,.14);border-color:rgba(214,40,57,.5);color:#ffc2c8}
+:root[data-theme="light"] .hintbox.urgent{background:#ffe3e6;color:#8f0f1c}
+
+/* ---------- alarm permission checklist ---------- */
+.checklist{margin:10px 0 4px;display:flex;flex-direction:column;gap:8px}
+.ck{display:flex;align-items:center;gap:10px;background:var(--field);border:1px solid var(--line);border-radius:12px;padding:9px 10px}
+.ck div{flex:1;min-width:0}
+.ck b{display:block;font-size:13px;color:var(--text)}
+.ck small{display:block;font-size:11px;color:var(--muted)}
+.fixbtn{background:var(--azure);color:#fff;font-weight:800;font-size:12px;padding:8px 12px;border-radius:10px;flex:none}
