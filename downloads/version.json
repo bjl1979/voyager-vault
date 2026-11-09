@@ -1,7 +1,7 @@
 {
-  "versionCode": 6,
-  "versionName": "2.2.0",
-  "apk": "https://bjl1979.github.io/voyager-vault/downloads/VoyagerVault-2.2.0.apk",
+  "versionCode": 7,
+  "versionName": "2.2.1",
+  "apk": "https://bjl1979.github.io/voyager-vault/downloads/VoyagerVault-2.2.1.apk",
   "sizeMB": "4.0",
-  "notes": "New Pack tab: things to carry in sections (camera gear, clothes…), tick as you pack, fold sections, copy a list from another trip, and a Coming-home check."
+  "notes": "Pinch-to-zoom is back in documents: pinch with two fingers, drag to move around, double-tap to zoom in or back out."
 }

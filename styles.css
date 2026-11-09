@@ -190,7 +190,10 @@ input[type=date].input{min-width:0;-webkit-appearance:none;appearance:none;min-h
 .vtop .x{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.15);font-size:17px;color:#fff;flex:none}
 .vtop b{flex:1;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .awake{font-size:10.5px;font-weight:800;background:rgba(255,181,71,.2);color:var(--amber);padding:5px 9px;border-radius:12px;white-space:nowrap}
-.vbody{flex:1;overflow:auto;background:#fff;-webkit-overflow-scrolling:touch;display:flex;align-items:flex-start;justify-content:center;touch-action:pan-x pan-y pinch-zoom}
+.vbody{flex:1;overflow:auto;background:#fff;-webkit-overflow-scrolling:touch;display:block;touch-action:pan-x pan-y;overscroll-behavior:contain}
+.vwrap{min-width:100%;min-height:100%;width:max-content;display:flex;align-items:center;justify-content:center;padding:8px}
+.vwrap canvas{flex:none;will-change:transform}
+.vzoom{font-size:12px;font-weight:800;background:rgba(255,255,255,.15);padding:4px 8px;border-radius:9px;margin-left:4px}
 .vbody img,.vbody canvas{display:block;margin:auto;max-width:none;background:#fff}
 .vbody .msg{margin:auto;color:#5b7699;font-weight:700;padding:30px;text-align:center}
 .vref{background:#eef4fc;color:#0B2545;text-align:center;font-size:14px;padding:8px;font-weight:700}

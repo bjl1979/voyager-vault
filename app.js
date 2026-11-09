@@ -1,6 +1,6 @@
 /* Voyager Vault – offline travel document folders (all data stays on this device) */
 'use strict';
-const APP_VERSION = '2.2.0';
+const APP_VERSION = '2.2.1';
 
 const CATS = [
   { id: 'passport',  label: 'Passport / ID',  short: 'Passport',  folder: 'Passport_ID',  ic: 'book-user', c1: '#818CF8', c2: '#6366F1' },
@@ -1086,7 +1086,7 @@ async function openViewer(docId) {
     <div class="vtop"><button class="x" id="vx" aria-label="Close">${icon('x', 20, 2.4)}</button><b>${esc(d.title)} · ${esc(currentTrip ? currentTrip.destination : '')}</b><span class="awake hidden" id="vawake">🔆 SCREEN ON</span></div>
     ${d.ref ? `<div class="vref">${esc(cat(d.category).short === 'Flights' ? 'PNR' : 'Ref')}<span>${esc(d.ref)}</span></div>` : ''}
     <div class="vbody" id="vb"><div class="msg"><span class="spin"></span></div></div>
-    <div class="vbot"><div class="g">${isPdf ? `<button id="vprev" aria-label="Previous page">${icon('chevron-left', 20, 2.4)}</button><span id="vpage">1 / 1</span><button id="vnext" aria-label="Next page">${icon('chevron-right', 20, 2.4)}</button>` : `<span>${fmtSize(d.size || 0)}</span>`}</div>
+    <div class="vbot"><div class="g">${isPdf ? `<button id="vprev" aria-label="Previous page">${icon('chevron-left', 20, 2.4)}</button><span id="vpage">1 / 1</span><button id="vnext" aria-label="Next page">${icon('chevron-right', 20, 2.4)}</button>` : `<span>${fmtSize(d.size || 0)}</span>`}<span class="vzoom hidden" id="vzoom"></span></div>
       <div class="g">${isImg || isPdf ? `<button id="vrot" aria-label="Rotate 90 degrees" title="Rotate">${icon('rotate-cw', 19, 2.3)}</button>` : ''}<button id="vout" aria-label="Zoom out">${icon('minus', 20, 2.4)}</button><button id="vin" aria-label="Zoom in">${icon('plus', 20, 2.4)}</button>${navigator.share || Native.isApp ? `<button id="vshare" aria-label="Share">${icon('share-2', 19, 2.3)}</button>` : ''}</div></div>`;
   layer.append(v);
   viewerOpen = true;
@@ -1098,12 +1098,60 @@ async function openViewer(docId) {
   });
   $('#vx', v).onclick = () => back();
   keepAwake(true).then(ok => ok && $('#vawake', v).classList.remove('hidden'));
-  const ZOOMS = [1, 1.5, 2, 3, 4];
-  const setZoom = dir => { const i = Math.max(0, Math.min(ZOOMS.length - 1, ZOOMS.indexOf(zoom) + dir)); zoom = ZOOMS[i]; draw(); };
-  $('#vin', v).onclick = () => setZoom(1); $('#vout', v).onclick = () => setZoom(-1);
+  const ZMIN = 1, ZMAX = 6, clampZ = z => Math.min(ZMAX, Math.max(ZMIN, z));
+  // keep the spot at (sx, sy) inside the viewer under the finger while the zoom changes
+  const anchorAt = (sx, sy) => {
+    const c = $('canvas', vb); if (!c) return null;
+    const r = c.getBoundingClientRect(), vr = vb.getBoundingClientRect();
+    return { fx: (vr.left + sx - r.left) / r.width, fy: (vr.top + sy - r.top) / r.height, sx, sy };
+  };
+  const zoomTo = (z, sx = vb.clientWidth / 2, sy = vb.clientHeight / 2) => {
+    z = clampZ(z); if (Math.abs(z - zoom) < 0.01) return;
+    const an = anchorAt(sx, sy); zoom = z; draw(an);
+  };
+  $('#vin', v).onclick = () => zoomTo(zoom * 1.5); $('#vout', v).onclick = () => zoomTo(zoom / 1.5);
+
+  // pinch with two fingers, drag with one, double-tap to zoom in / back to fit
+  let pinch = null, lastTap = 0, tapX = 0, tapY = 0, moved = false, touchDbl = 0;
+  const dist = (a, b) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+  vb.addEventListener('touchstart', e => {
+    moved = false;
+    if (e.touches.length === 2) {
+      const c = $('canvas', vb); if (!c) return;
+      const [p1, p2] = e.touches, vr = vb.getBoundingClientRect(), cr = c.getBoundingClientRect();
+      const mx = (p1.clientX + p2.clientX) / 2, my = (p1.clientY + p2.clientY) / 2;
+      pinch = { d0: dist(p1, p2), ratio: 1, c, sx: mx - vr.left, sy: my - vr.top, an: anchorAt(mx - vr.left, my - vr.top) };
+      c.style.transformOrigin = `${mx - cr.left}px ${my - cr.top}px`;
+      e.preventDefault();
+    }
+  }, { passive: false });
+  vb.addEventListener('touchmove', e => {
+    moved = true;
+    if (pinch && e.touches.length === 2) {
+      const r = dist(e.touches[0], e.touches[1]) / pinch.d0;
+      pinch.ratio = clampZ(zoom * r) / zoom;
+      pinch.c.style.transform = `scale(${pinch.ratio})`;
+      e.preventDefault();
+    }
+  }, { passive: false });
+  vb.addEventListener('touchend', e => {
+    if (pinch && e.touches.length < 2) {
+      const p = pinch; pinch = null;
+      const z = clampZ(zoom * p.ratio);
+      if (Math.abs(z - zoom) < 0.02) { p.c.style.transform = ''; return; }
+      zoom = z; draw(p.an);
+      return;
+    }
+    if (e.touches.length || e.changedTouches.length !== 1 || moved) return;
+    const t = e.changedTouches[0], now = Date.now(), vr = vb.getBoundingClientRect();
+    if (now - lastTap < 320 && Math.hypot(t.clientX - tapX, t.clientY - tapY) < 30) {
+      zoomTo(zoom > 1.2 ? 1 : 2.5, t.clientX - vr.left, t.clientY - vr.top); lastTap = 0; touchDbl = now;
+    } else { lastTap = now; tapX = t.clientX; tapY = t.clientY; }
+  });
+  vb.addEventListener('dblclick', e => { if (Date.now() - touchDbl < 700) return; const vr = vb.getBoundingClientRect(); zoomTo(zoom > 1.2 ? 1 : 2.5, e.clientX - vr.left, e.clientY - vr.top); });
   const rb = $('#vrot', v);
   if (rb) rb.onclick = async () => {
-    rot = (rot + 90) % 360; vb.scrollTop = 0; vb.scrollLeft = 0; draw();
+    rot = (rot + 90) % 360; zoom = 1; vb.scrollTop = 0; vb.scrollLeft = 0; draw();
     // remember it, and turn the thumbnail too
     d.rotation = rot;
     if (d.thumb) d.thumb = await rotateDataURL(d.thumb).catch(() => d.thumb);
@@ -1120,9 +1168,19 @@ async function openViewer(docId) {
   };
 
   let img;
-  async function draw() {
+  const show = (c, an) => {
+    const w = document.createElement('div'); w.className = 'vwrap'; w.append(c);
+    vb.innerHTML = ''; vb.append(w);
+    if (an) {   // put the same spot of the document back under the finger
+      const r = c.getBoundingClientRect(), vr = vb.getBoundingClientRect();
+      vb.scrollLeft += (r.left - vr.left) + an.fx * r.width - an.sx;
+      vb.scrollTop += (r.top - vr.top) + an.fy * r.height - an.sy;
+    }
+    const zi = $('#vzoom', v); zi.textContent = `×${zoom.toFixed(1)}`; zi.classList.toggle('hidden', zoom < 1.05);
+  };
+  async function draw(an) {
     const my = ++token;
-    const cw = vb.clientWidth, ch = vb.clientHeight;
+    const cw = vb.clientWidth - 16, ch = vb.clientHeight - 16;
     if (isImg) {
       if (!img) {
         url = URL.createObjectURL(d.blob);
@@ -1144,7 +1202,7 @@ async function openViewer(docId) {
       ctx.translate(c.width / 2, c.height / 2); ctx.rotate(rot * Math.PI / 180);
       const w = img.naturalWidth * fit * px, h = img.naturalHeight * fit * px;
       ctx.drawImage(img, -w / 2, -h / 2, w, h);
-      vb.innerHTML = ''; vb.append(c);
+      show(c, an);
     } else if (isPdf) {
       try {
         if (!pdf) { const pdfjs = await loadPdfJs(); pdf = await pdfjs.getDocument({ data: await d.blob.arrayBuffer() }).promise; }
@@ -1152,17 +1210,17 @@ async function openViewer(docId) {
         if (my !== token) return;
         const rotation = ((pg.rotate || 0) + rot) % 360;
         const vp0 = pg.getViewport({ scale: 1, rotation });
-        const cssW = Math.max(200, (cw - 16) * zoom);
+        const cssW = Math.max(200, cw * zoom);
         let scale = cssW / vp0.width;
         const dpr = Math.min(window.devicePixelRatio || 1, 3);
         let px = scale * dpr;
         const maxPx = 16e6; if (vp0.width * vp0.height * px * px > maxPx) px = Math.sqrt(maxPx / (vp0.width * vp0.height));
         const vp = pg.getViewport({ scale: px, rotation });
         const c = document.createElement('canvas'); c.width = Math.floor(vp.width); c.height = Math.floor(vp.height);
-        c.style.width = Math.round(cssW) + 'px'; c.style.margin = '8px auto';
+        c.style.width = Math.round(cssW) + 'px'; c.style.height = Math.round(cssW * vp.height / vp.width) + 'px';
         await pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
         if (my !== token) return;
-        vb.innerHTML = ''; vb.append(c);
+        show(c, an);
         $('#vpage', v).textContent = `${page} / ${pdf.numPages}`;
         $('#vprev', v).disabled = page <= 1; $('#vnext', v).disabled = page >= pdf.numPages;
       } catch (e) { console.error(e); vb.innerHTML = '<div class="msg">This PDF could not be displayed.<br>Try “Share” to open it in another app.</div>'; }
