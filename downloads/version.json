@@ -1,7 +1,7 @@
 {
-  "versionCode": 7,
-  "versionName": "2.2.1",
-  "apk": "https://bjl1979.github.io/voyager-vault/downloads/VoyagerVault-2.2.1.apk",
+  "versionCode": 8,
+  "versionName": "2.2.2",
+  "apk": "https://bjl1979.github.io/voyager-vault/downloads/VoyagerVault-2.2.2.apk",
   "sizeMB": "4.0",
-  "notes": "Pinch-to-zoom is back in documents: pinch with two fingers, drag to move around, double-tap to zoom in or back out."
+  "notes": "Tidier document viewer: the page counter stays on one line and the zoom level floats above the buttons."
 }

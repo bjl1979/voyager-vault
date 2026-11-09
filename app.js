@@ -1,6 +1,6 @@
 /* Voyager Vault – offline travel document folders (all data stays on this device) */
 'use strict';
-const APP_VERSION = '2.2.1';
+const APP_VERSION = '2.2.2';
 
 const CATS = [
   { id: 'passport',  label: 'Passport / ID',  short: 'Passport',  folder: 'Passport_ID',  ic: 'book-user', c1: '#818CF8', c2: '#6366F1' },
@@ -1086,7 +1086,8 @@ async function openViewer(docId) {
     <div class="vtop"><button class="x" id="vx" aria-label="Close">${icon('x', 20, 2.4)}</button><b>${esc(d.title)} · ${esc(currentTrip ? currentTrip.destination : '')}</b><span class="awake hidden" id="vawake">🔆 SCREEN ON</span></div>
     ${d.ref ? `<div class="vref">${esc(cat(d.category).short === 'Flights' ? 'PNR' : 'Ref')}<span>${esc(d.ref)}</span></div>` : ''}
     <div class="vbody" id="vb"><div class="msg"><span class="spin"></span></div></div>
-    <div class="vbot"><div class="g">${isPdf ? `<button id="vprev" aria-label="Previous page">${icon('chevron-left', 20, 2.4)}</button><span id="vpage">1 / 1</span><button id="vnext" aria-label="Next page">${icon('chevron-right', 20, 2.4)}</button>` : `<span>${fmtSize(d.size || 0)}</span>`}<span class="vzoom hidden" id="vzoom"></span></div>
+    <span class="vzoom hidden" id="vzoom" aria-live="polite"></span>
+    <div class="vbot"><div class="g">${isPdf ? `<button id="vprev" aria-label="Previous page">${icon('chevron-left', 20, 2.4)}</button><span id="vpage">1 / 1</span><button id="vnext" aria-label="Next page">${icon('chevron-right', 20, 2.4)}</button>` : `<span>${fmtSize(d.size || 0)}</span>`}</div>
       <div class="g">${isImg || isPdf ? `<button id="vrot" aria-label="Rotate 90 degrees" title="Rotate">${icon('rotate-cw', 19, 2.3)}</button>` : ''}<button id="vout" aria-label="Zoom out">${icon('minus', 20, 2.4)}</button><button id="vin" aria-label="Zoom in">${icon('plus', 20, 2.4)}</button>${navigator.share || Native.isApp ? `<button id="vshare" aria-label="Share">${icon('share-2', 19, 2.3)}</button>` : ''}</div></div>`;
   layer.append(v);
   viewerOpen = true;
