@@ -1,6 +1,6 @@
 /* Voyager Vault – offline travel document folders (all data stays on this device) */
 'use strict';
-const APP_VERSION = '1.0.4';
+const APP_VERSION = '1.0.5';
 
 const CATS = [
   { id: 'passport',  label: 'Passport / ID',  short: 'Passport',  folder: 'Passport_ID',  icon: '🛂' },
@@ -15,6 +15,18 @@ const CATS = [
 ];
 const cat = id => CATS.find(c => c.id === id) || CATS[CATS.length - 1];
 const PURPOSES = ['Business', 'Leisure', 'Family', 'Photography', 'Other'];
+const NOTE_TOPICS = [
+  { k: 'SIM / eSIM', i: '📶', hint: 'e.g. Singtel tourist eSIM, buy at Changi T3 arrivals, 100 GB for S$15' },
+  { k: 'Money',      i: '💱', hint: 'e.g. Currency SGD. Best exchange: Mustafa Centre. Cards accepted almost everywhere' },
+  { k: 'Transport',  i: '🚕', hint: 'e.g. Use Grab for taxis. EZ-Link card for the MRT' },
+  { k: 'Emergency',  i: '🆘', hint: 'e.g. Police 999 · Ambulance 995 · Nearest hospital…' },
+  { k: 'Embassy',    i: '🏛️', hint: 'e.g. High Commission of India, 31 Grange Rd · +65 6737 6777' },
+  { k: 'Power plug', i: '🔌', hint: 'e.g. Type G (UK 3-pin), 230 V. Pack an adapter' },
+  { k: 'Contacts',   i: '👤', hint: 'e.g. Site contact / host name and phone, hotel front desk' },
+  { k: 'To do',      i: '✅', hint: 'e.g. Check in online 24 h before, print hotel voucher' },
+];
+const topicIcon = k => (NOTE_TOPICS.find(n => n.k === k) || { i: '📝' }).i;
+const noteText = t => (t.noteItems || []).map(n => `${n.topic || ''} ${n.text}`).join(' ');
 
 const COUNTRIES = {
   Qatar:'QA', India:'IN', 'United Arab Emirates':'AE', 'Saudi Arabia':'SA', Oman:'OM', Bahrain:'BH', Kuwait:'KW',
@@ -268,7 +280,7 @@ async function renderList() {
     return;
   }
   const q = homeQuery.trim().toLowerCase();
-  const match = t => !q || [t.destination, t.country, t.from, t.to, t.purpose, t.notes, text[t.id]].join(' ').toLowerCase().includes(q);
+  const match = t => !q || [t.destination, t.country, t.from, t.to, t.purpose, noteText(t), text[t.id]].join(' ').toLowerCase().includes(q);
   const groups = { ongoing: [], upcoming: [], done: [] };
   trips.filter(match).forEach(t => groups[status(t).key].push(t));
   const byStart = (a, b) => (a.start || '9999').localeCompare(b.start || '9999');
@@ -305,6 +317,10 @@ let currentTrip = null;
 async function renderTrip(id) {
   const t = await DB.getTrip(id);
   if (!t) return navigate('/', true);
+  if (t.notes && !t.noteItems) {   // move the old single notes box into the new Notes section
+    t.noteItems = [{ id: DB.uid(), topic: '', text: t.notes, done: false, created: Date.now() }];
+    delete t.notes; await DB.saveTrip(t);
+  }
   currentTrip = t;
   document.title = `${t.destination} · Voyager Vault`;
   const docs = (await DB.docsFor(id)).sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999') || a.created - b.created);
@@ -317,11 +333,15 @@ async function renderTrip(id) {
 
   let body = '';
   if (st.key === 'done') body += `<div class="banner">🏁 <span>Trip finished. Back up this folder and free up space.</span><button data-act="end">End trip ›</button></div>`;
-  if (t.notes) body += `<div class="notes">${esc(t.notes)}</div>`;
   if (pinned.length) {
     body += `<div class="section" style="color:var(--amber)">★ ESSENTIALS <b>tap to show</b></div><div class="ess">` +
       pinned.map(d => `<button class="tile" data-view="${d.id}"><div class="th">${d.thumb ? `<img src="${d.thumb}" alt="">` : cat(d.category).icon}</div><span>${esc(d.title)}</span></button>`).join('') + `</div>`;
   }
+  const notes = (t.noteItems || []).slice().sort((x, y) => (x.done - y.done) || (x.created - y.created));
+  body += `<div class="section">📝 NOTES <button class="addlink" data-act="note">＋ Add note</button></div>`;
+  body += notes.length
+    ? `<div class="notes-card">${notes.map(noteRow).join('')}</div>`
+    : `<button class="empty-note" data-act="note"><b>Things to remember for this trip</b><span>SIM card to buy, currency, taxi app, emergency numbers, embassy…</span></button>`;
   if (!docs.length) {
     body += `<div class="empty"><div class="big">📂</div><h3>This trip folder is empty</h3>
       <p>Tap <b>📷 Scan</b> to photograph a document, or <b>＋ Add files</b> to pick PDFs and photos. Your passport, visa, tickets and hotel bookings all go here.</p></div>`;
@@ -361,7 +381,59 @@ async function renderTrip(id) {
     else if (d.edit) openDocEdit(d.edit);
     else if (d.addto) pick('#pickFiles', d.addto);
     else if (d.fold) { exp.has(d.fold) ? exp.delete(d.fold) : exp.add(d.fold); renderTrip(id); }
+    else if (d.act === 'note') openNoteSheet(t);
+    else if (d.note) openNoteSheet(t, d.note);
+    else if (d.ntog) toggleNote(t, d.ntog);
   };
+}
+
+function noteRow(n) {
+  return `<div class="note ${n.done ? 'done' : ''}"><button class="nchk" data-ntog="${n.id}" aria-label="${n.done ? 'Mark not done' : 'Mark done'}">${n.done ? '✓' : ''}</button>
+    <button class="nbody" data-note="${n.id}">${n.topic ? `<b>${topicIcon(n.topic)} ${esc(n.topic)}</b>` : ''}<span>${esc(n.text)}</span></button></div>`;
+}
+async function toggleNote(t, id) {
+  const n = (t.noteItems || []).find(x => x.id === id); if (!n) return;
+  n.done = !n.done; await DB.saveTrip(t); renderTrip(t.id);
+}
+function openNoteSheet(t, noteId) {
+  const n = noteId ? (t.noteItems || []).find(x => x.id === noteId) : null;
+  if (noteId && !n) return;
+  const topic0 = n ? n.topic : '';
+  openSheet(`
+    <h3>${n ? 'Edit note' : 'New note'} · ${esc(t.destination)}</h3>
+    <span class="lbl">Topic (optional)</span>
+    <div class="chips" id="topics">${NOTE_TOPICS.map(x => `<button type="button" class="chip ${x.k === topic0 ? 'on' : ''}" data-k="${esc(x.k)}">${x.i} ${esc(x.k)}</button>`).join('')}</div>
+    <label class="lbl" for="nText">Note</label>
+    <textarea class="input" id="nText" rows="6" maxlength="2000" placeholder="${esc((NOTE_TOPICS.find(x => x.k === topic0) || {}).hint || 'Anything you need to remember for this trip…')}">${esc(n ? n.text : '')}</textarea>
+    <div class="actions">${n ? '<button class="btn danger" id="nDel">🗑 Delete</button>' : '<button class="btn ghost" id="nCancel">Cancel</button>'}<button class="btn primary" id="nSave">Save note</button></div>`,
+  sheet => {
+    let topic = topic0;
+    const ta = $('#nText', sheet);
+    $$('#topics .chip', sheet).forEach(c => c.onclick = () => {
+      const on = c.classList.contains('on');
+      $$('#topics .chip', sheet).forEach(x => x.classList.remove('on'));
+      topic = on ? '' : c.dataset.k;
+      if (!on) c.classList.add('on');
+      ta.placeholder = (NOTE_TOPICS.find(x => x.k === topic) || {}).hint || 'Anything you need to remember for this trip…';
+      ta.focus();
+    });
+    if (!n) setTimeout(() => ta.focus(), 250);
+    const c = $('#nCancel', sheet); if (c) c.onclick = () => back();
+    const del = $('#nDel', sheet);
+    if (del) del.onclick = async () => {
+      if (!confirm('Delete this note?')) return;
+      t.noteItems = t.noteItems.filter(x => x.id !== n.id);
+      await DB.saveTrip(t); await back(); toast('Note deleted'); renderTrip(t.id);
+    };
+    $('#nSave', sheet).onclick = async () => {
+      const text = ta.value.trim();
+      if (!text) { ta.focus(); toast('Write something first'); return; }
+      t.noteItems = t.noteItems || [];
+      if (n) Object.assign(n, { topic, text, edited: Date.now() });
+      else t.noteItems.push({ id: DB.uid(), topic, text, done: false, created: Date.now() });
+      await DB.saveTrip(t); protectStorage(); await back(); toast('Note saved ✔'); renderTrip(t.id);
+    };
+  });
 }
 
 function docRow(d) {
@@ -480,7 +552,6 @@ function openTripSheet(trip) {
     <div class="two"><div><label class="lbl" for="tStart">Start date</label><input class="input" id="tStart" type="date" value="${esc(t.start || '')}"></div>
       <div><label class="lbl" for="tEnd">End date</label><input class="input" id="tEnd" type="date" value="${esc(t.end || '')}"></div></div>
     <span class="lbl">Purpose</span><div class="chips" id="purp">${PURPOSES.map(p => `<button type="button" class="chip ${t.purpose === p ? 'on' : ''}" data-p="${p}">${p}</button>`).join('')}</div>
-    <label class="lbl" for="tNotes">Notes</label><textarea class="input" id="tNotes" placeholder="Embassy contact, hotel address, local SIM…" maxlength="1000">${esc(t.notes || '')}</textarea>
     <div class="actions">${isNew ? '<button class="btn ghost" id="tCancel">Cancel</button>' : '<button class="btn danger" id="tDel">🗑 Delete</button>'}<button class="btn primary" id="tSave">${isNew ? 'Create folder' : 'Save'}</button></div>`,
   sheet => {
     let purpose = t.purpose || '';
@@ -491,8 +562,8 @@ function openTripSheet(trip) {
     $('#tStart', sheet).onchange = e => { const end = $('#tEnd', sheet); if (!end.value || end.value < e.target.value) end.value = e.target.value; };
     if (isNew) { $('#tCancel', sheet).onclick = () => back(); setTimeout(() => $('#tDest', sheet).focus(), 250); }
     else $('#tDel', sheet).onclick = async () => {
-      const n = (await DB.docsFor(t.id)).length;
-      if (n) { alert(`This trip still has ${n} document${n > 1 ? 's' : ''}.\n\nUse “End trip” to back them up as a zip first, then delete.`); return; }
+      const n = (await DB.docsFor(t.id)).length + ((await DB.getTrip(t.id)).noteItems || []).length;
+      if (n) { alert(`This trip still has documents or notes.\n\nUse “End trip” to back them up as a zip first, then delete.`); return; }
       if (!confirm(`Delete the empty trip “${t.destination}”?`)) return;
       await DB.deleteTrip(t.id); await back(); toast('Trip deleted'); navigate('/', true);
     };
@@ -502,7 +573,7 @@ function openTripSheet(trip) {
       const start = $('#tStart', sheet).value, end = $('#tEnd', sheet).value;
       if (start && end && end < start) { toast('End date is before the start date'); return; }
       const rec = { ...t, id: t.id || DB.uid(), created: t.created || Date.now(), destination: dest, country: $('#tCountry', sheet).value.trim(),
-        from: $('#tFrom', sheet).value.trim().toUpperCase(), to: $('#tTo', sheet).value.trim().toUpperCase(), start, end: end || start, purpose, notes: $('#tNotes', sheet).value.trim() };
+        from: $('#tFrom', sheet).value.trim().toUpperCase(), to: $('#tTo', sheet).value.trim().toUpperCase(), start, end: end || start, purpose };
       await DB.saveTrip(rec);
       await back();
       if (isNew) { toast(`📁 ${dest} folder created`); navigate('/trip/' + rec.id); }
@@ -523,22 +594,24 @@ async function openEndTrip(t) {
   const size = docs.reduce((s, d) => s + (d.size || 0), 0);
   const used = CATS.filter(c => docs.some(d => d.category === c.id));
   const name = ZipIO.backupName(t) + '.zip';
-  const tree = docs.length ? used.map((c, i) => `  ${i === used.length - 1 ? '├' : '├'} ${c.folder}/  (${docs.filter(d => d.category === c.id).length})`).join('\n') + '\n  └ trip.json' : '';
+  const nNotes = (t.noteItems || []).length;
+  const keep = docs.length + nNotes > 0;
+  const tree = keep ? used.map(c => `  ├ ${c.folder}/  (${docs.filter(d => d.category === c.id).length})`).join('\n') + (nNotes ? `\n  ├ Notes.txt  (${nNotes})` : '') + '\n  └ trip.json' : '';
   openSheet(`
     <h3>End trip · ${esc(t.destination)} ${flag(t.country)}</h3>
-    <div class="summary"><div><b>${docs.length}</b><span>DOCS</span></div><div><b>${used.length}</b><span>FOLDERS</span></div><div><b>${fmtSize(size)}</b><span>SIZE</span></div></div>
-    ${docs.length ? `
+    <div class="summary"><div><b>${docs.length}</b><span>DOCS</span></div><div><b>${nNotes}</b><span>NOTES</span></div><div><b>${fmtSize(size)}</b><span>SIZE</span></div></div>
+    ${keep ? `
     <div class="step" id="s1">
       <div class="sh"><div class="num" id="n1">1</div><b>Back up trip folder</b></div>
       <div class="zipline mono">📦 ${esc(name)}\n${esc(tree)}</div>
       <div class="check hidden" id="ok1"></div>
       <button class="btn primary" id="bBackup">⤓ Back up &amp; save zip</button>
       <div style="margin-left:36px;margin-top:6px"><button class="linkbtn" id="bDl">or save straight to Downloads</button></div>
-    </div>` : '<p class="sub">This trip has no documents, so there is nothing to back up.</p>'}
-    <div class="step ${docs.length ? 'locked' : ''}" id="s2">
-      <div class="sh"><div class="num" id="n2">${docs.length ? 2 : 1}</div><b>Delete from phone</b></div>
-      <p>${docs.length ? `Frees ${fmtSize(size)}. You can restore it any time from the zip (Settings › Restore).` : 'Removes this empty trip folder.'}</p>
-      <button class="btn danger" id="bDelete" ${docs.length ? 'disabled' : ''}>🗑 Delete trip from phone</button>
+    </div>` : '<p class="sub">This trip has no documents or notes, so there is nothing to back up.</p>'}
+    <div class="step ${keep ? 'locked' : ''}" id="s2">
+      <div class="sh"><div class="num" id="n2">${keep ? 2 : 1}</div><b>Delete from phone</b></div>
+      <p>${keep ? `Frees ${fmtSize(size)}. You can restore it any time from the zip (Settings › Restore).` : 'Removes this empty trip folder.'}</p>
+      <button class="btn danger" id="bDelete" ${keep ? 'disabled' : ''}>🗑 Delete trip from phone</button>
     </div>
     <button class="btn ghost block" id="bKeep">Cancel · keep trip</button>`,
   sheet => {
@@ -553,7 +626,7 @@ async function openEndTrip(t) {
       try { return await ZipIO.buildBackup(t, docs, CATS); }
       finally { btn.disabled = false; btn.innerHTML = label; }
     };
-    if (docs.length) {
+    if (keep) {
       $('#bBackup', sheet).onclick = async e => {
         let file;
         try { file = await build(e.currentTarget); } catch (err) { toast('Backup failed: ' + err.message, 4000); return; }
@@ -568,11 +641,11 @@ async function openEndTrip(t) {
       };
     }
     $('#bDelete', sheet).onclick = async () => {
-      if (docs.length && !confirm(`Delete “${t.destination}” and its ${docs.length} document${docs.length > 1 ? 's' : ''} from this phone?\n\nMake sure the backup zip is saved first.`)) return;
+      if (keep && !confirm(`Delete “${t.destination}” with its ${docs.length} document${docs.length === 1 ? '' : 's'} and ${nNotes} note${nNotes === 1 ? '' : 's'} from this phone?\n\nMake sure the backup zip is saved first.`)) return;
       await DB.deleteTrip(t.id);
       delete expanded[t.id];
       await back(); navigate('/', true);
-      toast(`${t.destination} removed from phone${docs.length ? ' · backup zip keeps everything' : ''}`, 3500);
+      toast(`${t.destination} removed from phone${keep ? ' · backup zip keeps everything' : ''}`, 3500);
     };
     $('#bKeep', sheet).onclick = () => back();
   });

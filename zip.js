@@ -30,6 +30,11 @@ const ZipIO = {
       manifest.docs.push({ ...meta, path });
     }
     root.file('trip.json', JSON.stringify(manifest, null, 2));
+    const notes = trip.noteItems || [];
+    if (notes.length) {
+      root.file('Notes.txt', `Notes – ${trip.destination}\n\n` + notes.map(n =>
+        `${n.done ? '[x]' : '[ ]'} ${n.topic ? n.topic.toUpperCase() + ': ' : ''}${n.text}`).join('\n\n') + '\n');
+    }
     root.file('README.txt',
       `Voyager Vault backup – ${trip.destination}${trip.country ? ', ' + trip.country : ''}\n` +
       `Dates: ${trip.start || '?'} to ${trip.end || '?'}\n` +
