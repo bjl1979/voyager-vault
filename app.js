@@ -1,6 +1,6 @@
 /* Voyager Vault – offline travel document folders (all data stays on this device) */
 'use strict';
-const APP_VERSION = '2.0.0';
+const APP_VERSION = '2.0.1';
 
 const CATS = [
   { id: 'passport',  label: 'Passport / ID',  short: 'Passport',  folder: 'Passport_ID',  icon: '🛂' },
@@ -1055,6 +1055,23 @@ async function installApp() {
   const { outcome } = await installEvt.userChoice.catch(() => ({}));
   installEvt = null; paintInstall();
   if (outcome === 'accepted') toast('Installing… the icon appears in a few seconds', 4000);
+}
+
+/* ---------------- keep the text box you type in above the keyboard ---------------- */
+function revealField(el) {
+  if (!el || !el.isConnected) return;
+  try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch { el.scrollIntoView(); }
+}
+document.addEventListener('focusin', e => {
+  const el = e.target;
+  if (!el.matches || !el.matches('input:not([type=file]), textarea, select')) return;
+  setTimeout(() => revealField(el), 320);
+});
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', () => {
+    const el = document.activeElement;
+    if (el && el.matches && el.matches('input, textarea, select')) revealField(el);
+  });
 }
 
 /* ---------------- boot ---------------- */

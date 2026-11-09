@@ -1,6 +1,6 @@
 // Voyager Vault service worker – caches the app so it opens with no internet.
 // Your documents are NOT here; they live in the phone's IndexedDB.
-const CACHE = 'voyager-vault-v2.0.0';
+const CACHE = 'voyager-vault-v2.0.1';
 const ASSETS = [
   './', 'index.html', 'styles.css', 'app.js', 'db.js', 'zip.js', 'reminders.js', 'native.js', 'manifest.webmanifest',
   'vendor/jszip.min.js', 'vendor/pdf.min.js', 'vendor/pdf.worker.min.js',
