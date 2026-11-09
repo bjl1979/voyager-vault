@@ -1,6 +1,6 @@
 /* Voyager Vault – offline travel document folders (all data stays on this device) */
 'use strict';
-const APP_VERSION = '2.0.1';
+const APP_VERSION = '2.0.2';
 
 const CATS = [
   { id: 'passport',  label: 'Passport / ID',  short: 'Passport',  folder: 'Passport_ID',  icon: '🛂' },
@@ -252,7 +252,7 @@ async function renderHome() {
     <header class="hero">
       <div class="top">
         <div class="brand"><div class="logo">${PLANE}</div><div>VOYAGER<br>VAULT</div></div>
-        <div style="display:flex;gap:8px;align-items:center"><button id="btnInstall" class="pill ok hidden" style="background:#fff;color:#1E6FD9;border-color:#fff">⬇ INSTALL APP</button><span id="offpill" class="pill wait">…</span>
+        <div style="display:flex;gap:8px;align-items:center"><button id="btnInstall" class="pill ok hidden" style="background:#fff;color:#1E6FD9;border-color:#fff">⬇ INSTALL APP</button><button id="btnUpdate" class="pill ok hidden" style="background:#FFB547;color:#0B2545;border-color:#FFB547">⬆ UPDATE</button><span id="offpill" class="pill wait">…</span>
           <button class="icon-btn" id="btnSettings" aria-label="Settings">${GEAR}</button></div>
       </div>
       <div class="flight" aria-hidden="true">
@@ -267,7 +267,7 @@ async function renderHome() {
     <div class="wrap" id="list"></div>
     <button class="fab" id="btnNewTrip">＋ New Trip</button>`;
   $('#btnSettings').onclick = openSettings;
-  paintInstall();
+  paintInstall(); paintUpdate();
   $('#btnNewTrip').onclick = () => openTripSheet();
   $('#q').oninput = e => { homeQuery = e.target.value; renderList(); };
   paintOfflinePill();
@@ -915,6 +915,7 @@ async function openSettings() {
   const off = await offlineStatus();
   const tick = b => b ? '✅' : '❌';
   const rs = await Native.status();
+  const appInfo = await Native.appInfo();
   const nTasks = trips.reduce((s, t) => s + (t.todos || []).filter(x => !x.done && x.priority !== 'delayed').length, 0);
   openSheet(`
     <h3>Settings</h3>
@@ -934,6 +935,10 @@ async function openSettings() {
         <a class="btn primary block" style="margin-top:10px;text-decoration:none" href="downloads/VoyagerVault.apk" download>⬇ Get the Android app (APK)</a>
         <p style="margin-top:8px;font-size:11.5px">Before switching: tap <b>Back up all trips</b> below, then restore that zip inside the Android app.</p>`}
     </div>
+    ${Native.isApp ? `<div class="setrow" id="updRow"><h4>⬆️ App updates</h4>
+      <p>Installed: <b>v${esc(appInfo ? appInfo.versionName : APP_VERSION)}</b>. Updates keep all your trips, documents, tasks and notes.</p>
+      <div id="updBox"></div>
+      <button class="btn ghost block" id="sCheckUpd">🔄 Check for updates</button></div>` : ''}
     <div class="setrow"><h4>✈️ Offline check</h4>
       <p>${tick(off.active)} Offline engine running in this app<br>${tick(off.shell)} App page saved<br>${tick(off.files >= OFFLINE_FILES)} App files saved (${off.files}/${OFFLINE_FILES})<br>
       ${isOfflineReady(off) ? '<b style="color:var(--green)">Ready: this app opens in airplane mode.</b>' : '<b style="color:var(--amber)">Not ready yet. Keep internet on, close the app fully and reopen it, then check again.</b>'}</p>
@@ -957,6 +962,11 @@ async function openSettings() {
     };
     const si = $('#sInstall', sheet); if (si) si.onclick = async () => { await back(); installApp(); };
     wireReminderChecklist(sheet, () => { back().then(openSettings); });
+    const cu = $('#sCheckUpd', sheet);
+    if (cu) {
+      cu.onclick = () => runUpdateCheck(sheet, true);
+      if (updateState && updateState.available) showUpdateBox(sheet, updateState);
+    }
     const q = $('#sQuiet', sheet);
     if (q) q.onclick = async () => { q.classList.toggle('on'); Native.setQuiet(q.classList.contains('on')); await Native.syncAll(); toast(Native.quiet() ? 'Quiet hours on' : 'Quiet hours off: urgent alarms ring at night too'); };
     const ts = $('#sTest', sheet);
@@ -1039,6 +1049,57 @@ async function maybeReminderSetup() {
   show();
 }
 
+/* ---------------- in-app updates (Android app) ---------------- */
+let updateState = null;
+function paintUpdate() {
+  const b = $('#btnUpdate'); if (!b) return;
+  const show = !!(updateState && updateState.available);
+  b.classList.toggle('hidden', !show);
+  if (show) { b.textContent = `⬆ UPDATE ${updateState.latest.versionName}`; b.onclick = () => openSettings().then(() => { const r = $('#updRow'); r && r.scrollIntoView({ block: 'center' }); }); }
+}
+async function backgroundUpdateCheck() {
+  if (!Native.isApp || !navigator.onLine) return;
+  const last = Number(store.get('vv-upd-checked', 0));
+  if (Date.now() - last < 20 * 3600e3 && !(updateState && updateState.available)) return;
+  try { updateState = await Native.checkUpdate(); store.set('vv-upd-checked', String(Date.now())); paintUpdate(); }
+  catch (e) { /* offline or GitHub unreachable: try again next time */ }
+}
+function showUpdateBox(sheet, st) {
+  const box = $('#updBox', sheet); if (!box) return;
+  const l = st.latest;
+  box.innerHTML = `<div class="hintbox normal" style="margin:8px 0 10px"><b>🎉 Version ${esc(l.versionName)} is available</b>${l.notes ? `<br>${esc(l.notes)}` : ''}${l.sizeMB ? `<br><small>${esc(l.sizeMB)} MB download</small>` : ''}</div>
+    <button class="btn primary block" id="sDoUpd">⬇ Download &amp; install ${esc(l.versionName)}</button>
+    <p style="font-size:11.5px;margin-top:8px">Android will ask <b>“Do you want to update this app?”</b>. Tap <b>Update</b>. If Samsung blocks it, switch <b>Auto Blocker</b> off for a moment (Settings › Security and privacy).</p>`;
+  $('#sDoUpd', sheet).onclick = async e => {
+    const btn = e.currentTarget;
+    const info = await Native.appInfo();
+    if (info && !info.canInstall) {
+      toast('First allow Voyager Vault to install updates: switch on “Allow from this source”, then come back and tap again.', 7000);
+      await Native.openSetting('installUpdates');
+      return;
+    }
+    btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Downloading…';
+    try {
+      await Native.installUpdate(l.apk, pct => { if (pct >= 0) btn.innerHTML = `<span class="spin"></span> Downloading… ${pct}%`; });
+      btn.innerHTML = 'Tap “Update” on the Android screen';
+    } catch (err) {
+      toast('Update failed: ' + (err.message || err) + '. Check your internet and try again.', 5000);
+      btn.disabled = false; btn.innerHTML = `⬇ Download &amp; install ${esc(l.versionName)}`;
+    }
+  };
+}
+async function runUpdateCheck(sheet, manual) {
+  const btn = $('#sCheckUpd', sheet); const box = $('#updBox', sheet);
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Checking…';
+  try {
+    updateState = await Native.checkUpdate(); store.set('vv-upd-checked', String(Date.now())); paintUpdate();
+    if (updateState.available) showUpdateBox(sheet, updateState);
+    else box.innerHTML = `<p style="margin:6px 0 10px;color:var(--green);font-weight:700">✔ You have the latest version (v${esc(updateState.current.versionName)}).</p>`;
+  } catch (err) {
+    box.innerHTML = `<p style="margin:6px 0 10px;color:var(--amber);font-weight:700">Couldn’t check: you need internet for updates. Everything else works offline.</p>`;
+  } finally { btn.disabled = false; btn.innerHTML = '🔄 Check for updates'; }
+}
+
 /* ---------------- install prompt (Android Chrome / Samsung Internet) ---------------- */
 let installEvt = null;
 const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone;
@@ -1089,7 +1150,8 @@ if (Native.isApp) {
     if (overlays.length || (location.hash && location.hash !== '#/')) { history.back(); return true; }
     return false;
   });
-  Native.onResume(nativeRefresh);
+  Native.onResume(() => { nativeRefresh(); backgroundUpdateCheck(); });
+  setTimeout(backgroundUpdateCheck, 2500);
   Native.onChanged(nativeRefresh);
   nativeRefresh();
 }

@@ -77,6 +77,24 @@
     },
     onResume(fn) { const A = plug('App'); if (A) A.addListener('resume', fn); },
     onChanged(fn) { const v = V(); if (v) v.addListener('changed', fn); },
+
+    // ---- in-app updates (Android app only) ----
+    UPDATE_URL: 'https://bjl1979.github.io/voyager-vault/downloads/version.json',
+    async appInfo() { const v = V(); if (!v) return null; try { return await v.appInfo(); } catch { return null; } },
+    /** {current, latest, available} – latest is the published version.json */
+    async checkUpdate() {
+      const v = V(); if (!v) return null;
+      const cur = await this.appInfo();
+      const { text } = await v.fetchText({ url: this.UPDATE_URL + '?t=' + Date.now() });
+      const latest = JSON.parse(text);
+      return { current: cur, latest, available: Number(latest.versionCode) > Number(cur && cur.versionCode || 0) };
+    },
+    async installUpdate(url, onProgress) {
+      const v = V(); if (!v) return;
+      let h = null;
+      if (onProgress) h = await v.addListener('updateProgress', e => onProgress(e.pct));
+      try { await v.downloadAndInstall({ url }); } finally { if (h && h.remove) h.remove(); }
+    },
   };
   window.Native = Native;
 })();

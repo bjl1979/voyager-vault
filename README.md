@@ -15,7 +15,7 @@ Keep your passport copy, visa, flight tickets, hotel bookings and insurance in a
 - **Restore** any backup zip later from Settings.
 - Works offline, has no account or cloud, and does no tracking. The Ocean-night and Sky-day themes are included.
 
-## 📱 Android app (v2.0.1) – To-Do with alarm reminders
+## 📱 Android app (v2.0.2) – To-Do with alarm reminders
 The Android app is the full Voyager Vault **plus a To-Do list in every trip, with real alarms** that ring even when the app is closed and the phone is in airplane mode.
 
 | Priority | Reminder |
@@ -31,6 +31,13 @@ The Android app is the full Voyager Vault **plus a To-Do list in every trip, wit
 **Installing on a Samsung:** Settings ▸ Security and privacy ▸ **Auto Blocker off** (just for the install) ▸ open the APK ▸ Install (tap *Install anyway* if Play Protect asks) ▸ turn Auto Blocker back on. On first urgent task the app walks you through allowing notifications, full-screen alarms and unrestricted battery.
 
 **Signing key:** every update must be signed with the same key (`voyager-vault-release.jks` + `keystore.properties`, kept privately by the owner, never committed). Without it, an update can only be installed by uninstalling first, which deletes the app's data.
+
+**Updates:** ⚙ Settings ▸ **App updates** ▸ Check for updates (the app also checks daily and shows **⬆ UPDATE** on the home screen). Android asks once to *Allow from this source*; after that each update is **Download & install ▸ Update**. All data is kept.
+
+### Releasing an update
+1. Bump `versionCode` / `versionName` in `android/app/build.gradle` (and `APP_VERSION` in `app.js`, `CACHE` in `sw.js`).
+2. Build a signed APK with the **same key**, copy it to `downloads/VoyagerVault-<version>.apk` and `downloads/VoyagerVault.apk`.
+3. Update `downloads/version.json` (versionCode, versionName, apk URL, notes) and push. Phones pick it up from Settings.
 
 ### Building the APK
 ```

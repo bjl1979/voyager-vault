@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.PowerManager;
@@ -35,6 +36,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.io.ByteArrayOutputStream;
 import java.util.UUID;
 
 @CapacitorPlugin(
@@ -160,6 +165,9 @@ public class VaultNativePlugin extends Plugin {
             case "overlay":
                 i = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, pkg);
                 break;
+            case "installUpdates":
+                i = Build.VERSION.SDK_INT >= 26 ? new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, pkg) : appDetails(pkg);
+                break;
             default:
                 i = appDetails(pkg);
         }
@@ -259,5 +267,88 @@ public class VaultNativePlugin extends Plugin {
             getActivity().startActivity(Intent.createChooser(send, call.getString("title", name)));
             call.resolve();
         } catch (Exception e) { call.reject(e.getMessage()); }
+    }
+
+    // ---------------- in-app updates ----------------
+
+    @PluginMethod
+    public void appInfo(PluginCall call) {
+        JSObject r = new JSObject();
+        try {
+            PackageInfo pi = getContext().getPackageManager().getPackageInfo(getContext().getPackageName(), 0);
+            r.put("versionName", pi.versionName);
+            r.put("versionCode", Build.VERSION.SDK_INT >= 28 ? pi.getLongVersionCode() : pi.versionCode);
+        } catch (Exception e) { r.put("versionName", "?"); r.put("versionCode", 0); }
+        r.put("canInstall", Build.VERSION.SDK_INT < 26 || getContext().getPackageManager().canRequestPackageInstalls());
+        call.resolve(r);
+    }
+
+    private static HttpURLConnection open(String url) throws Exception {
+        HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
+        c.setConnectTimeout(15000);
+        c.setReadTimeout(30000);
+        c.setInstanceFollowRedirects(true);
+        c.setUseCaches(false);
+        if (c.getResponseCode() != 200) throw new Exception("Server replied " + c.getResponseCode());
+        return c;
+    }
+
+    /** Reads a small text file (the version list) from the internet. */
+    @PluginMethod
+    public void fetchText(PluginCall call) {
+        String url = call.getString("url", "");
+        new Thread(() -> {
+            try {
+                HttpURLConnection c = open(url);
+                try (InputStream in = c.getInputStream()) {
+                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+                    byte[] buf = new byte[8192];
+                    int n;
+                    while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+                    JSObject r = new JSObject();
+                    r.put("text", new String(out.toByteArray(), StandardCharsets.UTF_8));
+                    call.resolve(r);
+                } finally { c.disconnect(); }
+            } catch (Exception e) { call.reject("No connection: " + e.getMessage()); }
+        }).start();
+    }
+
+    /** Downloads the new APK, then opens Android's own "Update this app?" screen. */
+    @PluginMethod
+    public void downloadAndInstall(PluginCall call) {
+        String url = call.getString("url", "");
+        new Thread(() -> {
+            File dir = new File(getContext().getCacheDir(), "update");
+            //noinspection ResultOfMethodCallIgnored
+            dir.mkdirs();
+            File apk = new File(dir, "VoyagerVault-update.apk");
+            try {
+                HttpURLConnection c = open(url);
+                long total = c.getContentLengthLong(), got = 0;
+                int lastPct = -1;
+                try (InputStream in = c.getInputStream(); FileOutputStream out = new FileOutputStream(apk)) {
+                    byte[] buf = new byte[1 << 16];
+                    int n;
+                    while ((n = in.read(buf)) > 0) {
+                        out.write(buf, 0, n);
+                        got += n;
+                        int pct = total > 0 ? (int) (got * 100 / total) : -1;
+                        if (pct != lastPct && pct % 5 == 0) {
+                            lastPct = pct;
+                            JSObject ev = new JSObject(); ev.put("pct", pct);
+                            notifyListeners("updateProgress", ev);
+                        }
+                    }
+                } finally { c.disconnect(); }
+                if (total > 0 && got != total) throw new Exception("Download incomplete");
+                Uri uri = FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", apk);
+                Intent i = new Intent(Intent.ACTION_VIEW).setDataAndType(uri, "application/vnd.android.package-archive")
+                        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+                getActivity().runOnUiThread(() -> {
+                    try { getActivity().startActivity(i); call.resolve(); }
+                    catch (Exception e) { call.reject("Could not open the installer: " + e.getMessage()); }
+                });
+            } catch (Exception e) { call.reject(e.getMessage() == null ? "Download failed" : e.getMessage()); }
+        }).start();
     }
 }
