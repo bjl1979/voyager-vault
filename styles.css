@@ -271,3 +271,91 @@ input[type=date].input{min-width:0;-webkit-appearance:none;appearance:none;min-h
 .ck b{display:block;font-size:13px;color:var(--text)}
 .ck small{display:block;font-size:11px;color:var(--muted)}
 .fixbtn{background:var(--azure);color:#fff;font-weight:800;font-size:12px;padding:8px 12px;border-radius:10px;flex:none}
+
+/* ================= v2.1 – tabs & modern line icons ================= */
+.ico{display:block;flex:none}
+.chip-ic{display:grid;place-items:center;border-radius:12px;color:#fff;flex:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 4px 10px rgba(0,0,0,.22)}
+.icon-btn .ico{margin:auto}
+.endbtn{display:flex;align-items:center;gap:5px}
+.fab{gap:7px}
+.btn .ico{margin-right:1px}
+.search .ico{opacity:.9;color:#fff}
+.banner .ico{color:var(--amber)}
+
+/* tab bar (Material 3 style) */
+.tabs{position:sticky;top:0;z-index:4;display:flex;margin:10px 0 0;padding:6px 6px 8px;border-bottom:1px solid var(--line);background:rgba(8,26,51,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+:root[data-theme="light"] .tabs{background:rgba(234,243,255,.9)}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11.5px;font-weight:700;color:var(--muted);padding:2px 0}
+.tab .pill{position:relative;width:58px;height:32px;border-radius:16px;display:grid;place-items:center;transition:background .2s}
+.tab.on{color:var(--text)}
+.tab.on .pill{background:linear-gradient(135deg,rgba(61,139,255,.45),rgba(30,111,217,.32));box-shadow:inset 0 0 0 1px rgba(141,197,255,.35)}
+:root[data-theme="light"] .tab.on .pill{background:rgba(30,111,217,.15);color:var(--azure)}
+.bdg{position:absolute;top:-4px;right:4px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;font-size:10px;font-weight:900;display:grid;place-items:center;background:#2a4a7a;color:#dbeaff;border:2px solid var(--bg)}
+.bdg.red{background:#E5233A;color:#fff}
+.tabbody{animation:fade .18s ease;min-height:60vh;touch-action:pan-y}
+
+/* essentials */
+.glance{display:flex;gap:8px;margin:14px 0 4px}
+.glance>*{flex:1;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:9px 8px;display:flex;align-items:center;gap:8px;text-align:left;color:var(--text)}
+.gi{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;flex:none}
+.gi.red{background:rgba(229,35,58,.18);color:#ff6b7a}.gi.blue{background:rgba(61,139,255,.18);color:var(--sky)}.gi.amber{background:rgba(255,181,71,.18);color:var(--amber)}
+:root[data-theme="light"] .gi.blue{color:var(--azure)}
+.gt{display:block;min-width:0}
+.gt b{display:block;font-size:17px;line-height:1.05}
+.gt b.r{color:#ff6b7a}
+.gt span{display:block;font-size:9px;letter-spacing:.7px;color:var(--muted);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nextalarm{width:100%;display:flex;align-items:center;gap:10px;margin-top:8px;padding:10px 12px;border-radius:14px;text-align:left;color:#ffc2c8;font-size:12px;
+  background:linear-gradient(90deg,rgba(214,40,57,.28),rgba(214,40,57,.08));border:1px solid rgba(214,40,57,.5)}
+.nextalarm span{flex:1;min-width:0}
+.nextalarm b{display:block;color:#fff;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+:root[data-theme="light"] .nextalarm{color:#8f0f1c}:root[data-theme="light"] .nextalarm b{color:#B01E2E}
+.ess2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.ess2 .t{position:relative;background:var(--surface);border:1px solid rgba(141,197,255,.22);border-radius:16px;padding:8px 8px 10px;text-align:left;color:var(--text);min-width:0}
+.ess2 .th{height:124px;border-radius:11px;background:#F4F9FF;overflow:hidden;margin-bottom:8px;display:grid;place-items:center}
+.ess2 .th img{width:100%;height:100%;object-fit:cover}
+.ess2 .noth{color:#8fa9cc}
+.ess2 .tchip{position:absolute;left:14px;top:102px}
+.ess2 b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ess2 small{display:flex;align-items:center;gap:4px;font-size:10.5px;color:var(--sky);margin-top:2px}
+:root[data-theme="light"] .ess2 small{color:var(--azure)}
+.starf{color:var(--amber)}
+.hintpin{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:14px;font-size:11.5px;color:var(--muted)}
+.pinhelp{margin-top:14px;text-align:center;background:var(--surface);border:1.5px dashed var(--ghost-line);border-radius:16px;padding:22px 18px}
+.pinhelp .pinic{width:56px;height:56px;border-radius:18px;margin:0 auto 10px;display:grid;place-items:center;color:var(--amber);background:rgba(255,181,71,.15)}
+.pinhelp h3{font-size:16px;margin-bottom:6px}
+.pinhelp p{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:14px}
+.pinhelp .btn{display:inline-flex;flex:none;padding:11px 18px}
+.empty .bigic{width:84px;height:84px;margin:0 auto 12px;border-radius:24px;display:grid;place-items:center;color:var(--sky);background:rgba(61,139,255,.14)}
+:root[data-theme="light"] .empty .bigic{color:var(--azure)}
+
+/* folders & documents */
+.fh .chip-ic{border-radius:11px}
+.fh .ch{width:auto;color:var(--muted)}
+.rot-down{transform:rotate(-90deg)}
+.folder.zero .fh{opacity:.6}
+.star .starfill{fill:var(--amber);color:var(--amber)}
+.more{display:grid;place-items:center}
+.chip{display:inline-flex;align-items:center;gap:6px}
+.cdot{width:20px;height:20px;border-radius:6px;display:grid;place-items:center;color:#fff}
+.prio button{display:flex;align-items:center;justify-content:center;gap:6px}
+
+/* to-do & notes icons */
+.grp .ico{flex:none}
+.tbody small{display:flex;align-items:center;gap:4px}
+.nbody b{display:flex;align-items:center;gap:5px}
+
+/* viewer controls */
+.vtop .x,.vbot button{display:grid;place-items:center}
+
+/* narrow phones: keep the trip name readable */
+.tripview .appbar p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tripview .appbar{gap:8px}
+@media (max-width:400px){
+  .lbl-end{display:none}
+  .endbtn{padding:9px 10px}
+  .tripview .appbar .icon-btn{width:36px;height:36px}
+  .glance>*{padding:9px 7px;gap:6px}
+  .gi{width:26px;height:26px;border-radius:8px}
+  .gi .ico{width:15px;height:15px}
+}
+@media (max-width:340px){ .gi{display:none} }

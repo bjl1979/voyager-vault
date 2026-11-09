@@ -1,33 +1,35 @@
 /* Voyager Vault – offline travel document folders (all data stays on this device) */
 'use strict';
-const APP_VERSION = '2.0.2';
+const APP_VERSION = '2.1.0';
 
 const CATS = [
-  { id: 'passport',  label: 'Passport / ID',  short: 'Passport',  folder: 'Passport_ID',  icon: '🛂' },
-  { id: 'visa',      label: 'Visa',           short: 'Visa',      folder: 'Visa',         icon: '📄' },
-  { id: 'flight',    label: 'Flights',        short: 'Flights',   folder: 'Flights',      icon: '✈️' },
-  { id: 'hotel',     label: 'Hotels',         short: 'Hotels',    folder: 'Hotels',       icon: '🏨' },
-  { id: 'insurance', label: 'Insurance',      short: 'Insurance', folder: 'Insurance',    icon: '🛡️' },
-  { id: 'transport', label: 'Transport',      short: 'Transport', folder: 'Transport',    icon: '🚗' },
-  { id: 'itinerary', label: 'Itinerary',      short: 'Itinerary', folder: 'Itinerary',    icon: '🗺️' },
-  { id: 'work',      label: 'Work / Permits', short: 'Work',      folder: 'Work_Permits', icon: '💼' },
-  { id: 'other',     label: 'Other',          short: 'Other',     folder: 'Other',        icon: '📎' },
+  { id: 'passport',  label: 'Passport / ID',  short: 'Passport',  folder: 'Passport_ID',  ic: 'book-user', c1: '#818CF8', c2: '#6366F1' },
+  { id: 'visa',      label: 'Visa',           short: 'Visa',      folder: 'Visa',         ic: 'stamp', c1: '#2DD4BF', c2: '#0D9488' },
+  { id: 'flight',    label: 'Flights',        short: 'Flights',   folder: 'Flights',      ic: 'plane', c1: '#60A5FA', c2: '#2563EB' },
+  { id: 'hotel',     label: 'Hotels',         short: 'Hotels',    folder: 'Hotels',       ic: 'bed-double', c1: '#C084FC', c2: '#9333EA' },
+  { id: 'insurance', label: 'Insurance',      short: 'Insurance', folder: 'Insurance',    ic: 'shield-check', c1: '#4ADE80', c2: '#16A34A' },
+  { id: 'transport', label: 'Transport',      short: 'Transport', folder: 'Transport',    ic: 'car-front', c1: '#FB923C', c2: '#EA580C' },
+  { id: 'itinerary', label: 'Itinerary',      short: 'Itinerary', folder: 'Itinerary',    ic: 'map', c1: '#F472B6', c2: '#DB2777' },
+  { id: 'work',      label: 'Work / Permits', short: 'Work',      folder: 'Work_Permits', ic: 'briefcase', c1: '#94A3B8', c2: '#475569' },
+  { id: 'other',     label: 'Other',          short: 'Other',     folder: 'Other',        ic: 'paperclip', c1: '#CBD5E1', c2: '#64748B' },
 ];
 const cat = id => CATS.find(c => c.id === id) || CATS[CATS.length - 1];
+/** coloured rounded-square icon for a document type */
+const catChip = (c, size = 36, isz = 18) => `<span class="chip-ic" style="width:${size}px;height:${size}px;background:linear-gradient(145deg,${c.c1},${c.c2})">${icon(c.ic, isz, 2.2)}</span>`;
 const PURPOSES = ['Business', 'Leisure', 'Family', 'Photography', 'Other'];
 const NOTE_TOPICS = [
-  { k: 'SIM / eSIM', i: '📶', hint: 'e.g. Singtel tourist eSIM, buy at Changi T3 arrivals, 100 GB for S$15' },
-  { k: 'Money',      i: '💱', hint: 'e.g. Currency SGD. Best exchange: Mustafa Centre. Cards accepted almost everywhere' },
-  { k: 'Transport',  i: '🚕', hint: 'e.g. Use Grab for taxis. EZ-Link card for the MRT' },
-  { k: 'Emergency',  i: '🆘', hint: 'e.g. Police 999 · Ambulance 995 · Nearest hospital…' },
-  { k: 'Embassy',    i: '🏛️', hint: 'e.g. High Commission of India, 31 Grange Rd · +65 6737 6777' },
-  { k: 'Power plug', i: '🔌', hint: 'e.g. Type G (UK 3-pin), 230 V. Pack an adapter' },
-  { k: 'Contacts',   i: '👤', hint: 'e.g. Site contact / host name and phone, hotel front desk' },
-  { k: 'To do',      i: '✅', hint: 'e.g. Check in online 24 h before, print hotel voucher' },
+  { k: 'SIM / eSIM', ic: 'smartphone', col: '#3B82F6', hint: 'e.g. Singtel tourist eSIM, buy at Changi T3 arrivals, 100 GB for S$15' },
+  { k: 'Money',      ic: 'banknote', col: '#16A34A', hint: 'e.g. Currency SGD. Best exchange: Mustafa Centre. Cards accepted almost everywhere' },
+  { k: 'Transport',  ic: 'car-taxi-front', col: '#EA580C', hint: 'e.g. Use Grab for taxis. EZ-Link card for the MRT' },
+  { k: 'Emergency',  ic: 'siren', col: '#E5233A', hint: 'e.g. Police 999 · Ambulance 995 · Nearest hospital…' },
+  { k: 'Embassy',    ic: 'landmark', col: '#6366F1', hint: 'e.g. High Commission of India, 31 Grange Rd · +65 6737 6777' },
+  { k: 'Power plug', ic: 'plug-zap', col: '#CA8A04', hint: 'e.g. Type G (UK 3-pin), 230 V. Pack an adapter' },
+  { k: 'Contacts',   ic: 'contact', col: '#0D9488', hint: 'e.g. Site contact / host name and phone, hotel front desk' },
+  { k: 'To do',      ic: 'circle-check', col: '#2563EB', hint: 'e.g. Check in online 24 h before, print hotel voucher' },
 ];
-const topicIcon = k => (NOTE_TOPICS.find(n => n.k === k) || { i: '📝' }).i;
+const topicOf = k => NOTE_TOPICS.find(n => n.k === k) || { ic: 'notebook-text', col: '#8DC5FF' };
 const noteText = t => (t.noteItems || []).map(n => `${n.topic || ''} ${n.text}`).join(' ') + ' ' + (t.todos || []).map(x => `${x.title} ${x.details || ''}`).join(' ');
-const PRIO = { urgent: { label: 'Urgent', icon: '🔴' }, normal: { label: 'Normal', icon: '🔵' }, delayed: { label: 'Delayed', icon: '⏸' } };
+const PRIO = { urgent: { label: 'Urgent', ic: 'siren' }, normal: { label: 'Normal', ic: 'bell' }, delayed: { label: 'Delayed', ic: 'circle-pause' } };
 const openUrgent = t => (t.todos || []).filter(x => !x.done && x.priority === 'urgent').length;
 const collapsed = (() => { try { return JSON.parse(localStorage.getItem('vv-collapse') || '{}'); } catch { return {}; } })();
 function toggleCollapsed(k) { collapsed[k] = !collapsed[k]; store.set('vv-collapse', JSON.stringify(collapsed)); }
@@ -203,7 +205,7 @@ async function makeThumb(blob, type) {
 const thumbHTML = d => d.thumb ? `<img src="${d.thumb}" alt="">` : (d.type === 'application/pdf' ? 'PDF' : 'FILE');
 
 /* ---------------- offline status ---------------- */
-const OFFLINE_FILES = 17;
+const OFFLINE_FILES = 18;
 async function offlineStatus() {
   if (Native.isApp) return { supported: true, active: true, files: OFFLINE_FILES, shell: true, cache: 'built into the Android app', app: true };
   const st = { supported: 'serviceWorker' in navigator && 'caches' in window && location.protocol !== 'file:', active: false, files: 0, shell: false, cache: '' };
@@ -238,8 +240,8 @@ let homeQuery = '', showDone = false;
 const expanded = {};
 
 function render() {
-  const m = (location.hash || '#/').slice(1).match(/^\/trip\/([\w-]+)/);
-  if (m) return renderTrip(m[1]);
+  const m = (location.hash || '#/').slice(1).match(/^\/trip\/([\w-]+)(?:\/(\w+))?/);
+  if (m) return renderTrip(m[1], m[2]);
   return renderHome();
 }
 
@@ -262,10 +264,10 @@ async function renderHome() {
           <circle cx="10" cy="34" r="4" fill="#fff"/><circle cx="288" cy="26" r="4" fill="#FFB547"/></svg>
         <div style="position:absolute;left:52%;top:5px;transform:rotate(8deg);color:#fff;font-size:18px">✈</div>
       </div>
-      <label class="search">🔍<input id="q" type="search" placeholder="Search trips, PNR, hotel…" value="${esc(homeQuery)}" autocomplete="off"></label>
+      <label class="search">${icon('search', 18)}<input id="q" type="search" placeholder="Search trips, PNR, hotel…" value="${esc(homeQuery)}" autocomplete="off"></label>
     </header>
     <div class="wrap" id="list"></div>
-    <button class="fab" id="btnNewTrip">＋ New Trip</button>`;
+    <button class="fab" id="btnNewTrip">${icon('plus', 19, 2.4)}New Trip</button>`;
   $('#btnSettings').onclick = openSettings;
   paintInstall(); paintUpdate();
   $('#btnNewTrip').onclick = () => openTripSheet();
@@ -319,13 +321,34 @@ function passCard(t, n) {
 /* ---------------- trip folder ---------------- */
 let currentTrip = null;
 
-async function renderTrip(id) {
+const TABS = [
+  { id: 'essentials', label: 'Essentials', ic: 'star' },
+  { id: 'todo', label: 'To-Do', ic: 'list-checks' },
+  { id: 'notes', label: 'Notes', ic: 'notebook-pen' },
+  { id: 'folders', label: 'Folders', ic: 'folder-open' },
+];
+const tabKey = id => 'vv-tab-' + id;
+function tabFor(id, fromUrl) {
+  if (TABS.some(x => x.id === fromUrl)) return fromUrl;
+  const saved = store.get(tabKey(id), '');
+  return TABS.some(x => x.id === saved) ? saved : 'essentials';
+}
+function switchTab(id, tab) {
+  store.set(tabKey(id), tab);
+  history.replaceState(history.state, '', `#/trip/${id}/${tab}`);
+  renderTrip(id, tab);
+  window.scrollTo(0, 0);
+}
+
+async function renderTrip(id, tabArg) {
   const t = await DB.getTrip(id);
   if (!t) return navigate('/', true);
   if (t.notes && !t.noteItems) {   // move the old single notes box into the new Notes section
     t.noteItems = [{ id: DB.uid(), topic: '', text: t.notes, done: false, created: Date.now() }];
     delete t.notes; await DB.saveTrip(t);
   }
+  const fromHash = ((location.hash || '').match(/^#\/trip\/[\w-]+\/(\w+)/) || [])[1];
+  const tab = tabFor(id, tabArg || fromHash);
   currentTrip = t;
   document.title = `${t.destination} · Voyager Vault`;
   const docs = (await DB.docsFor(id)).sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999') || a.created - b.created);
@@ -335,58 +358,83 @@ async function renderTrip(id) {
   if (!expanded[id]) { expanded[id] = new Set(docs.length <= 8 ? Object.keys(byCat) : []); }
   const exp = expanded[id];
   const subline = st.key === 'done' ? `${shortRange(t)} · completed` : `${shortRange(t)}${t.start ? ' · ' + st.text : ''}`;
+  const todos = t.todos || [], openT = todos.filter(x => !x.done), nU = openT.filter(x => x.priority === 'urgent').length;
+  const notes = (t.noteItems || []).slice().sort((x, y) => (x.done - y.done) || (x.created - y.created));
+
+  const badge = { essentials: pinned.length ? `<span class="bdg">${pinned.length}</span>` : '',
+    todo: nU ? `<span class="bdg red">${nU}</span>` : openT.length ? `<span class="bdg">${openT.length}</span>` : '',
+    notes: notes.length ? `<span class="bdg">${notes.length}</span>` : '',
+    folders: docs.length ? `<span class="bdg">${docs.length}</span>` : '' };
+  const tabsHTML = `<nav class="tabs" role="tablist">${TABS.map(x => `<button class="tab ${x.id === tab ? 'on' : ''}" role="tab" aria-selected="${x.id === tab}" data-tab="${x.id}">
+      <span class="pill">${icon(x.ic, 20, x.id === tab ? 2.2 : 1.9)}${badge[x.id]}</span>${x.label}</button>`).join('')}</nav>`;
 
   let body = '';
-  if (st.key === 'done') body += `<div class="banner">🏁 <span>Trip finished. Back up this folder and free up space.</span><button data-act="end">End trip ›</button></div>`;
-  if (pinned.length) {
-    body += `<div class="section" style="color:var(--amber)">★ ESSENTIALS <b>tap to show</b></div><div class="ess">` +
-      pinned.map(d => `<button class="tile" data-view="${d.id}"><div class="th">${d.thumb ? `<img src="${d.thumb}" alt="">` : cat(d.category).icon}</div><span>${esc(d.title)}</span></button>`).join('') + `</div>`;
-  }
-  // ---- to-do ----
-  const todos = t.todos || [];
-  const openT = todos.filter(x => !x.done), nU = openT.filter(x => x.priority === 'urgent').length;
-  const tC = !!collapsed.todo;
-  const tSum = !todos.length ? '' : (nU ? `<span class="ubadge">${nU} urgent</span>` : '') + (openT.length - nU ? `<span class="csum">${openT.length - nU} more</span>` : '') + (!openT.length ? '<span class="csum">all done ✓</span>' : '');
-  body += `<div class="section sechead"><button class="collapse" data-collapse="todo" aria-expanded="${!tC}">${tC ? '▸' : '▾'} ✅ TO-DO ${tC ? tSum : ''}</button><button class="addlink" data-act="todo">＋ Add task</button></div>`;
-  if (!tC) body += todos.length ? todoListHTML(t) : `<button class="empty-note todo-empty" data-act="todo"><b>Things to do before you go</b><span>Buy SIM, print visa copy, exchange money… Mark urgent ones for red alarms.</span></button>`;
-  // ---- notes ----
-  const notes = (t.noteItems || []).slice().sort((x, y) => (x.done - y.done) || (x.created - y.created));
-  const nC = !!collapsed.notes;
-  body += `<div class="section sechead"><button class="collapse" data-collapse="notes" aria-expanded="${!nC}">${nC ? '▸' : '▾'} 📝 NOTES ${nC && notes.length ? `<span class="csum">${notes.length} note${notes.length > 1 ? 's' : ''}</span>` : ''}</button><button class="addlink" data-act="note">＋ Add note</button></div>`;
-  if (!nC) body += notes.length
-    ? `<div class="notes-card">${notes.map(noteRow).join('')}</div>`
-    : `<button class="empty-note" data-act="note"><b>Things to remember for this trip</b><span>SIM card to buy, currency, taxi app, emergency numbers, embassy…</span></button>`;
-  if (!docs.length) {
-    body += `<div class="empty"><div class="big">📂</div><h3>This trip folder is empty</h3>
-      <p>Tap <b>📷 Scan</b> to photograph a document, or <b>＋ Add files</b> to pick PDFs and photos. Your passport, visa, tickets and hotel bookings all go here.</p></div>`;
+  if (tab === 'essentials') {
+    const days = st.key === 'upcoming' && t.start ? dayNum(t.start) - today() : null;
+    const third = days != null ? { v: days, l: days === 1 ? 'DAY LEFT' : 'DAYS LEFT' } : st.key === 'ongoing' ? { v: today() - dayNum(t.start) + 1, l: 'TRIP DAY' } : { v: '✓', l: st.key === 'done' ? 'COMPLETED' : 'NO DATES' };
+    body += `<div class="glance">
+      <button data-tab="todo"><span class="gi red">${icon('alarm-clock', 17)}</span><span class="gt"><b class="${nU ? 'r' : ''}">${nU}</b><span>URGENT</span></span></button>
+      <button data-tab="folders"><span class="gi blue">${icon('file-text', 17)}</span><span class="gt"><b>${docs.length}</b><span>DOCS</span></span></button>
+      <div><span class="gi amber">${icon('calendar-days', 17)}</span><span class="gt"><b>${third.v}</b><span>${third.l}</span></span></div></div>`;
+    const nextU = openT.filter(x => x.priority === 'urgent').map(x => ({ x, at: Reminders.times(t, x, Date.now(), { quiet: Native.quiet() })[0] })).sort((p, q) => (p.at || 9e15) - (q.at || 9e15))[0];
+    if (nextU) body += `<button class="nextalarm" data-tab="todo">${icon('siren', 16, 2.3)}<span><b>${esc(nextU.x.title)}</b>${nextU.at ? `Next alarm ${Reminders.fmt(nextU.at)}` : 'Urgent · no alarm time'}</span>${icon('chevron-right', 16)}</button>`;
+    if (pinned.length) {
+      body += `<div class="ess2">${pinned.map(d => `<button class="t" data-view="${d.id}"><div class="th">${d.thumb ? `<img src="${d.thumb}" alt="">` : `<span class="noth">${icon(cat(d.category).ic, 40, 1.6)}</span>`}</div>
+        <span class="tchip">${catChip(cat(d.category), 30, 15)}</span><b>${esc(d.title)}</b><small>${icon('star', 11, 2.5, 'starf')}Tap to show</small></button>`).join('')}</div>`;
+      body += `<p class="hintpin">${icon('pin', 13)}Pin more: ⋯ on any document › Pin to Essentials</p>`;
+    } else {
+      body += `<div class="pinhelp"><span class="pinic">${icon('star', 26, 1.8)}</span><h3>Your one-tap documents</h3>
+        <p>Pin your passport, visa and boarding pass here, ready to show at the counter. In <b>Folders</b>, tap ⋯ on a document › <b>Pin to Essentials</b>.</p>
+        <button class="btn ghost" data-tab="folders">${icon('folder-open', 17)}Go to Folders</button></div>`;
+    }
+  } else if (tab === 'todo') {
+    body += todos.length ? todoListHTML(t) : `<div class="empty"><div class="bigic">${icon('list-checks', 44, 1.6)}</div><h3>Things to do before you go</h3>
+      <p>Buy a SIM, print a visa copy, exchange money… Mark a task <b>Urgent</b> for red alarms that repeat every 6 hours until done.</p></div>`;
+  } else if (tab === 'notes') {
+    body += notes.length ? `<div class="notes-card">${notes.map(noteRow).join('')}</div>`
+      : `<div class="empty"><div class="bigic">${icon('notebook-pen', 44, 1.6)}</div><h3>Things to remember</h3><p>Which SIM to buy, the currency, taxi apps, emergency numbers, the embassy address…</p></div>`;
   } else {
-    body += `<div class="section">📁 FOLDERS <b>${docs.length} document${docs.length > 1 ? 's' : ''}</b></div>`;
-    const full = CATS.filter(c => byCat[c.id]), emptyC = CATS.filter(c => !byCat[c.id]);
-    body += full.map(c => {
-      const open = exp.has(c.id);
-      return `<div class="folder"><button class="fh" data-fold="${c.id}"><div class="fi">${c.icon}</div><div class="nm">${c.label}</div><span class="ct">${byCat[c.id].length}</span><span class="ch">${open ? '▾' : '▸'}</span></button>` +
-        (open ? byCat[c.id].map(docRow).join('') : '') + `</div>`;
-    }).join('');
-    if (emptyC.length) {
+    if (!docs.length) {
+      body += `<div class="empty"><div class="bigic">${icon('folder-open', 44, 1.6)}</div><h3>This trip folder is empty</h3>
+        <p>Tap <b>Scan</b> to photograph a document, or <b>Add files</b> to pick PDFs and photos. Your passport, visa, tickets and hotel bookings all go here.</p></div>`;
+    } else {
+      const full = CATS.filter(c => byCat[c.id]);
+      body += '<div style="height:4px"></div>' + full.map(c => {
+        const open = exp.has(c.id);
+        return `<div class="folder"><button class="fh" data-fold="${c.id}">${catChip(c)}<div class="nm">${c.label}</div><span class="ct">${byCat[c.id].length}</span><span class="ch">${icon(open ? 'chevron-left' : 'chevron-right', 16, 2.2, open ? 'rot-down' : '')}</span></button>` +
+          (open ? byCat[c.id].map(docRow).join('') : '') + `</div>`;
+      }).join('');
+    }
+    const emptyC = CATS.filter(c => !byCat[c.id]);
+    if (emptyC.length && docs.length) {
       body += `<div class="section" style="margin-top:14px">EMPTY FOLDERS <b>tap to add</b></div>` +
-        emptyC.map(c => `<div class="folder zero"><button class="fh" data-addto="${c.id}"><div class="fi">${c.icon}</div><div class="nm">${c.label}</div><span class="ch">＋</span></button></div>`).join('');
+        emptyC.map(c => `<div class="folder zero"><button class="fh" data-addto="${c.id}">${catChip(c, 28, 14)}<div class="nm">${c.label}</div><span class="ch">${icon('plus', 16, 2.2)}</span></button></div>`).join('');
     }
   }
 
+  const bars = {
+    todo: `<button class="btn primary" data-act="todo">${icon('plus', 19, 2.4)}Add task</button>`,
+    notes: `<button class="btn primary" data-act="note">${icon('plus', 19, 2.4)}Add note</button>`,
+  };
+  const bar = bars[tab] || `<button class="btn ghost" data-act="scan">${icon('camera', 19)}Scan</button><button class="btn primary" data-act="add">${icon('plus', 19, 2.4)}Add files</button>`;
+
   app.innerHTML = `<div class="tripview">
     <div class="appbar">
-      <button class="icon-btn" data-act="home" aria-label="Back">←</button>
+      <button class="icon-btn" data-act="home" aria-label="Back">${icon('arrow-left', 20)}</button>
       <div class="t"><h2>${flag(t.country)} ${esc(t.destination)}</h2><p>${esc(subline)}</p></div>
-      <button class="icon-btn" data-act="edit" aria-label="Edit trip">✎</button>
-      <button class="endbtn" data-act="end">End trip</button>
+      <button class="icon-btn" data-act="edit" aria-label="Edit trip">${icon('pencil', 18)}</button>
+      <button class="endbtn" data-act="end" aria-label="End trip">${icon('flag-triangle-right', 15)}<span class="lbl-end">End trip</span></button>
     </div>
-    <div class="wrap">${body}</div></div>
-    <div class="bar"><button class="btn ghost" data-act="scan">📷 Scan</button><button class="btn primary" data-act="add">＋ Add files</button></div>`;
+    ${st.key === 'done' ? `<div class="wrap"><div class="banner">${icon('flag-triangle-right', 18)}<span>Trip finished. Back up this folder and free up space.</span><button data-act="end">End trip ›</button></div></div>` : ''}
+    ${tabsHTML}
+    <div class="wrap tabbody" data-tabpane="${tab}">${body}</div></div>
+    <div class="bar">${bar}</div>`;
 
   app.onclick = e => {
     const b = e.target.closest('button'); if (!b) return;
     const d = b.dataset;
-    if (d.act === 'home') navigate('/');
+    if (d.tab) { if (d.tab !== tab) switchTab(id, d.tab); }
+    else if (d.act === 'home') navigate('/');
     else if (d.act === 'edit') openTripSheet(t);
     else if (d.act === 'end') openEndTrip(t);
     else if (d.act === 'scan') pick('#pickCam', null);
@@ -398,12 +446,23 @@ async function renderTrip(id) {
     else if (d.act === 'note') openNoteSheet(t);
     else if (d.note) openNoteSheet(t, d.note);
     else if (d.ntog) toggleNote(t, d.ntog);
-    else if (d.collapse) { toggleCollapsed(d.collapse); renderTrip(id); }
     else if (d.act === 'todo') openTodoSheet(t);
     else if (d.todo) openTodoSheet(t, d.todo);
     else if (d.ttog) toggleTodo(t, d.ttog);
     else if (d.act === 'tdone') { showDoneTodos[t.id] = !showDoneTodos[t.id]; renderTrip(id); }
   };
+
+  // swipe left / right to change tab
+  const pane = $('.tabbody', app);
+  let sx = null, sy = 0;
+  pane.addEventListener('touchstart', e => { if (e.touches.length !== 1 || overlays.length) { sx = null; return; } sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+  pane.addEventListener('touchend', e => {
+    if (sx == null) return;
+    const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy; sx = null;
+    if (Math.abs(dx) < 60 || Math.abs(dy) > Math.abs(dx) * 0.6) return;
+    const i = TABS.findIndex(x => x.id === tab) + (dx < 0 ? 1 : -1);
+    if (i >= 0 && i < TABS.length) switchTab(id, TABS[i].id);
+  }, { passive: true });
 }
 
 /* ---------------- trip to-do list ---------------- */
@@ -412,10 +471,10 @@ function todoListHTML(t) {
   const todos = t.todos || [];
   const by = p => todos.filter(x => !x.done && x.priority === p).sort((a, b) => (a.remindAt || '9999').localeCompare(b.remindAt || '9999') || a.created - b.created);
   const done = todos.filter(x => x.done).sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0));
-  const grp = (p, cls) => { const arr = by(p); return arr.length ? `<div class="grp ${cls}">${PRIO[p].icon} ${PRIO[p].label.toUpperCase()} · ${arr.length}</div>` + arr.map(x => todoRow(t, x)).join('') : ''; };
+  const grp = (p, cls) => { const arr = by(p); return arr.length ? `<div class="grp ${cls}">${icon(PRIO[p].ic, 14, 2.4)}${PRIO[p].label.toUpperCase()} · ${arr.length}</div>` + arr.map(x => todoRow(t, x)).join('') : ''; };
   let h = grp('urgent', 'u') + grp('normal', 'n') + grp('delayed', 'd');
   if (done.length) {
-    h += `<button class="grp c" data-act="tdone">✓ COMPLETED · ${done.length} ${showDoneTodos[t.id] ? '▾' : '▸'}</button>`;
+    h += `<button class="grp c" data-act="tdone">${icon('circle-check', 14, 2.4)}COMPLETED · ${done.length} ${showDoneTodos[t.id] ? '▾' : '▸'}</button>`;
     if (showDoneTodos[t.id]) h += done.map(x => todoRow(t, x)).join('');
   }
   return `<div class="todo-list">${h}</div>`;
@@ -424,7 +483,7 @@ function todoRow(t, x) {
   const desc = Reminders.describe(t, x, Date.now(), { quiet: Native.quiet() });
   const late = !x.done && /overdue|ended/.test(desc);
   return `<div class="task ${x.priority} ${x.done ? 'done' : ''}"><button class="tchk" data-ttog="${x.id}" aria-label="${x.done ? 'Mark not done' : 'Mark done'}">${x.done ? '✓' : ''}</button>
-    <button class="tbody" data-todo="${x.id}"><b>${esc(x.title)}</b>${x.details ? `<i>${esc(x.details)}</i>` : ''}<small class="${late ? 'late' : ''}">${esc(desc)}</small></button>
+    <button class="tbody" data-todo="${x.id}"><b>${esc(x.title)}</b>${x.details ? `<i>${esc(x.details)}</i>` : ''}<small class="${late ? 'late' : ''}">${/^⏰/.test(desc) ? icon('alarm-clock', 12, 2.3) : ''}${esc(desc.replace(/^⏰ /, ''))}</small></button>
     ${x.priority === 'urgent' && !x.done ? '<span class="flag">URGENT</span>' : ''}</div>`;
 }
 async function toggleTodo(t, id) {
@@ -455,14 +514,14 @@ function openTodoSheet(t, todoId) {
     <label class="lbl" for="kTitle">Task</label>
     <input class="input" id="kTitle" maxlength="120" placeholder="e.g. Buy Singtel eSIM" value="${esc(x ? x.title : '')}">
     <span class="lbl">Priority</span>
-    <div class="prio" id="kPrio">${Object.keys(PRIO).map(k => `<button type="button" class="${k} ${k === p0 ? 'on' : ''}" data-p="${k}">${PRIO[k].icon} ${PRIO[k].label}</button>`).join('')}</div>
+    <div class="prio" id="kPrio">${Object.keys(PRIO).map(k => `<button type="button" class="${k} ${k === p0 ? 'on' : ''}" data-p="${k}">${icon(PRIO[k].ic, 16, 2.3)}${PRIO[k].label}</button>`).join('')}</div>
     <div id="kWhen"><span class="lbl">Remind me</span>
       <div class="two"><input class="input" id="kDate" type="date" value="${esc(d0)}"><input class="input" id="kTime" type="time" value="${esc(tm0 || '09:00')}"></div></div>
     <div class="hintbox" id="kHint"></div>
     ${Native.isApp ? '' : '<p class="sub" style="margin-top:8px">🔔 Alarms ring only in the Voyager Vault <b>Android app</b>. Here the task is saved without alarms.</p>'}
     <label class="lbl" for="kDetails">Details (optional)</label>
     <textarea class="input" id="kDetails" rows="2" maxlength="1000" placeholder="Where, how much, anything to remember">${esc(x ? x.details || '' : '')}</textarea>
-    <div class="actions">${x ? '<button class="btn danger" id="kDel">🗑 Delete</button>' : '<button class="btn ghost" id="kCancel">Cancel</button>'}<button class="btn primary" id="kSave">Save task</button></div>`,
+    <div class="actions">${x ? `<button class="btn danger" id="kDel">${icon('trash-2', 17)}Delete</button>` : '<button class="btn ghost" id="kCancel">Cancel</button>'}<button class="btn primary" id="kSave">Save task</button></div>`,
   sheet => {
     let prio = p0;
     const paint = () => {
@@ -502,7 +561,7 @@ function openTodoSheet(t, todoId) {
 
 function noteRow(n) {
   return `<div class="note ${n.done ? 'done' : ''}"><button class="nchk" data-ntog="${n.id}" aria-label="${n.done ? 'Mark not done' : 'Mark done'}">${n.done ? '✓' : ''}</button>
-    <button class="nbody" data-note="${n.id}">${n.topic ? `<b>${topicIcon(n.topic)} ${esc(n.topic)}</b>` : ''}<span>${esc(n.text)}</span></button></div>`;
+    <button class="nbody" data-note="${n.id}">${n.topic ? `<b style="color:${topicOf(n.topic).col}">${icon(topicOf(n.topic).ic, 13, 2.4)}${esc(n.topic)}</b>` : ''}<span>${esc(n.text)}</span></button></div>`;
 }
 async function toggleNote(t, id) {
   const n = (t.noteItems || []).find(x => x.id === id); if (!n) return;
@@ -515,10 +574,10 @@ function openNoteSheet(t, noteId) {
   openSheet(`
     <h3>${n ? 'Edit note' : 'New note'} · ${esc(t.destination)}</h3>
     <span class="lbl">Topic (optional)</span>
-    <div class="chips" id="topics">${NOTE_TOPICS.map(x => `<button type="button" class="chip ${x.k === topic0 ? 'on' : ''}" data-k="${esc(x.k)}">${x.i} ${esc(x.k)}</button>`).join('')}</div>
+    <div class="chips" id="topics">${NOTE_TOPICS.map(x => `<button type="button" class="chip ${x.k === topic0 ? 'on' : ''}" data-k="${esc(x.k)}">${icon(x.ic, 15, 2.2)}${esc(x.k)}</button>`).join('')}</div>
     <label class="lbl" for="nText">Note</label>
     <textarea class="input" id="nText" rows="6" maxlength="2000" placeholder="${esc((NOTE_TOPICS.find(x => x.k === topic0) || {}).hint || 'Anything you need to remember for this trip…')}">${esc(n ? n.text : '')}</textarea>
-    <div class="actions">${n ? '<button class="btn danger" id="nDel">🗑 Delete</button>' : '<button class="btn ghost" id="nCancel">Cancel</button>'}<button class="btn primary" id="nSave">Save note</button></div>`,
+    <div class="actions">${n ? `<button class="btn danger" id="nDel">${icon('trash-2', 17)}Delete</button>` : '<button class="btn ghost" id="nCancel">Cancel</button>'}<button class="btn primary" id="nSave">Save note</button></div>`,
   sheet => {
     let topic = topic0;
     const ta = $('#nText', sheet);
@@ -552,8 +611,8 @@ function openNoteSheet(t, noteId) {
 function docRow(d) {
   const meta = [d.ref ? `<span class="mono">${esc(d.ref)}</span>` : '', d.date ? fmtDate(d.date, {}) : '', fmtSize(d.size || 0)].filter(Boolean).join(' · ');
   return `<div class="doc"><button class="open" data-view="${d.id}"><div class="dt">${thumbHTML(d)}</div>
-    <div class="dn"><div class="tt">${esc(d.title)}</div><small>${meta}</small></div>${d.pinned ? '<span class="star">★</span>' : ''}</button>
-    <button class="more" data-edit="${d.id}" aria-label="Edit document">⋯</button></div>`;
+    <div class="dn"><div class="tt">${esc(d.title)}</div><small>${meta}</small></div>${d.pinned ? `<span class="star">${icon('star', 16, 0, 'starfill')}</span>` : ''}</button>
+    <button class="more" data-edit="${d.id}" aria-label="Edit document">${icon('ellipsis', 20)}</button></div>`;
 }
 
 /* ---------------- add documents ---------------- */
@@ -564,7 +623,7 @@ $('#pickFiles').addEventListener('change', e => onPicked(e, false));
 $('#pickCam').addEventListener('change', e => onPicked(e, true));
 
 function chipsHTML(selected) {
-  return `<div class="chips" id="cats">${CATS.map(c => `<button type="button" class="chip ${c.id === selected ? 'on' : ''}" data-cat="${c.id}">${c.icon} ${c.short}</button>`).join('')}</div>`;
+  return `<div class="chips" id="cats">${CATS.map(c => `<button type="button" class="chip ${c.id === selected ? 'on' : ''}" data-cat="${c.id}"><span class="cdot" style="background:${c.c2}">${icon(c.ic, 12, 2.4)}</span>${c.short}</button>`).join('')}</div>`;
 }
 function wireChips(sheet, onPick) {
   $$('#cats .chip', sheet).forEach(ch => ch.onclick = () => { $$('#cats .chip', sheet).forEach(x => x.classList.remove('on')); ch.classList.add('on'); onPick && onPick(ch.dataset.cat); });
@@ -614,7 +673,7 @@ function openAddSheet(files, preset, fromCamera) {
         (expanded[t.id] = expanded[t.id] || new Set()).add(category);
         await back();
         toast(`Saved to ${cat(category).label} ✔`);
-        renderTrip(t.id);
+        if (tabFor(t.id) === 'essentials' && !pinned) switchTab(t.id, 'folders'); else renderTrip(t.id);
       } catch (err) {
         console.error(err); btn.disabled = false; btn.textContent = 'Save';
         toast(err.name === 'QuotaExceededError' ? 'Phone storage is full. Free up space and try again.' : 'Could not save: ' + err.message, 4000);
@@ -633,7 +692,7 @@ async function openDocEdit(docId) {
     <div class="two"><div><label class="lbl" for="fRef">PNR / Booking ref</label><input class="input mono" id="fRef" value="${esc(d.ref || '')}" maxlength="40"></div>
       <div><label class="lbl" for="fDate">Date</label><input class="input" id="fDate" type="date" value="${esc(d.date || '')}"></div></div>
     <button type="button" class="toggle ${d.pinned ? 'on' : ''}" id="fPin"><span class="sw"></span>★ Pin to Essentials</button>
-    <div class="actions"><button class="btn danger" id="fDel">🗑 Delete</button><button class="btn primary" id="fSave">Save</button></div>`,
+    <div class="actions"><button class="btn danger" id="fDel">${icon('trash-2', 17)}Delete</button><button class="btn primary" id="fSave">Save</button></div>`,
   sheet => {
     let category = d.category;
     wireChips(sheet, c => category = c);
@@ -665,7 +724,7 @@ function openTripSheet(trip) {
     <div class="two"><div><label class="lbl" for="tStart">Start date</label><input class="input" id="tStart" type="date" value="${esc(t.start || '')}"></div>
       <div><label class="lbl" for="tEnd">End date</label><input class="input" id="tEnd" type="date" value="${esc(t.end || '')}"></div></div>
     <span class="lbl">Purpose</span><div class="chips" id="purp">${PURPOSES.map(p => `<button type="button" class="chip ${t.purpose === p ? 'on' : ''}" data-p="${p}">${p}</button>`).join('')}</div>
-    <div class="actions">${isNew ? '<button class="btn ghost" id="tCancel">Cancel</button>' : '<button class="btn danger" id="tDel">🗑 Delete</button>'}<button class="btn primary" id="tSave">${isNew ? 'Create folder' : 'Save'}</button></div>`,
+    <div class="actions">${isNew ? '<button class="btn ghost" id="tCancel">Cancel</button>' : `<button class="btn danger" id="tDel">${icon('trash-2', 17)}Delete</button>`}<button class="btn primary" id="tSave">${isNew ? 'Create folder' : 'Save'}</button></div>`,
   sheet => {
     let purpose = t.purpose || '';
     $$('#purp .chip', sheet).forEach(c => c.onclick = () => {
@@ -726,7 +785,7 @@ async function openEndTrip(t) {
     <div class="step ${keep ? 'locked' : ''}" id="s2">
       <div class="sh"><div class="num" id="n2">${keep ? 2 : 1}</div><b>Delete from phone</b></div>
       <p>${keep ? `Frees ${fmtSize(size)}. You can restore it any time from the zip (Settings › Restore).` : 'Removes this empty trip folder.'}</p>
-      <button class="btn danger" id="bDelete" ${keep ? 'disabled' : ''}>🗑 Delete trip from phone</button>
+      <button class="btn danger" id="bDelete" ${keep ? 'disabled' : ''}>${icon('trash-2', 17)}Delete trip from phone</button>
     </div>
     <button class="btn ghost block" id="bKeep">Cancel · keep trip</button>`,
   sheet => {
@@ -806,11 +865,11 @@ async function openViewer(docId) {
   const isPdf = d.type === 'application/pdf', isImg = (d.type || '').startsWith('image/');
   const v = document.createElement('div'); v.className = 'viewer'; v.setAttribute('role', 'dialog');
   v.innerHTML = `
-    <div class="vtop"><button class="x" id="vx" aria-label="Close">✕</button><b>${esc(d.title)} · ${esc(currentTrip ? currentTrip.destination : '')}</b><span class="awake hidden" id="vawake">🔆 SCREEN ON</span></div>
+    <div class="vtop"><button class="x" id="vx" aria-label="Close">${icon('x', 20, 2.4)}</button><b>${esc(d.title)} · ${esc(currentTrip ? currentTrip.destination : '')}</b><span class="awake hidden" id="vawake">🔆 SCREEN ON</span></div>
     ${d.ref ? `<div class="vref">${esc(cat(d.category).short === 'Flights' ? 'PNR' : 'Ref')}<span>${esc(d.ref)}</span></div>` : ''}
     <div class="vbody" id="vb"><div class="msg"><span class="spin"></span></div></div>
-    <div class="vbot"><div class="g">${isPdf ? '<button id="vprev" aria-label="Previous page">◀</button><span id="vpage">1 / 1</span><button id="vnext" aria-label="Next page">▶</button>' : `<span>${fmtSize(d.size || 0)}</span>`}</div>
-      <div class="g">${isImg || isPdf ? '<button id="vrot" aria-label="Rotate 90 degrees" title="Rotate">⟳</button>' : ''}<button id="vout" aria-label="Zoom out">−</button><button id="vin" aria-label="Zoom in">＋</button>${navigator.share || Native.isApp ? '<button id="vshare" aria-label="Share">⇪</button>' : ''}</div></div>`;
+    <div class="vbot"><div class="g">${isPdf ? `<button id="vprev" aria-label="Previous page">${icon('chevron-left', 20, 2.4)}</button><span id="vpage">1 / 1</span><button id="vnext" aria-label="Next page">${icon('chevron-right', 20, 2.4)}</button>` : `<span>${fmtSize(d.size || 0)}</span>`}</div>
+      <div class="g">${isImg || isPdf ? `<button id="vrot" aria-label="Rotate 90 degrees" title="Rotate">${icon('rotate-cw', 19, 2.3)}</button>` : ''}<button id="vout" aria-label="Zoom out">${icon('minus', 20, 2.4)}</button><button id="vin" aria-label="Zoom in">${icon('plus', 20, 2.4)}</button>${navigator.share || Native.isApp ? `<button id="vshare" aria-label="Share">${icon('share-2', 19, 2.3)}</button>` : ''}</div></div>`;
   layer.append(v);
   viewerOpen = true;
   let url, pdf, page = 1, zoom = 1, token = 0, rot = (d.rotation || 0) % 360;
@@ -1140,7 +1199,7 @@ async function nativeRefresh() {
   const n = await Native.pullDone();
   await Native.syncAll();
   const goTo = await Native.launchTrip();
-  if (goTo && (await DB.getTrip(goTo))) { while (overlays.length) await back(); navigate('/trip/' + goTo); }
+  if (goTo && (await DB.getTrip(goTo))) { while (overlays.length) await back(); navigate('/trip/' + goTo + '/todo'); }
   else if (n) render();
   if (n) toast(`✓ ${n} task${n > 1 ? 's' : ''} marked done from the alarm`);
 }
