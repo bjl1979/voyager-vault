@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Voyager Vault – Trip Tabs Modern Icons</title>
+<style>
+:root{
+  --navy:#0B2545; --ocean:#13315C; --deep:#081a33; --azure:#1E6FD9; --azure2:#3D8BFF;
+  --sky:#8DC5FF; --mist:#D9ECFF; --cloud:#F4F9FF; --amber:#FFB547; --green:#3DDC97; --red:#FF6B6B;
+  --card:#10294d; --line:rgba(141,197,255,.18); --muted:#8FA9CC;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:radial-gradient(1200px 600px at 20% -10%,#1b4c8f 0,transparent 60%),linear-gradient(160deg,#061427,#0B2545 60%,#0a2a55);
+  color:#fff;padding:40px 32px 56px;min-height:100vh}
+.title{text-align:center;margin-bottom:34px}
+.title h1{font-size:30px;letter-spacing:.5px}
+.title h1 span{color:var(--sky)}
+.title p{color:var(--muted);margin-top:6px;font-size:15px}
+.row{display:flex;gap:34px;justify-content:center;flex-wrap:wrap}
+.cap{text-align:center;color:var(--sky);font-weight:600;font-size:14px;margin-top:14px;letter-spacing:.3px}
+.cap small{display:block;color:var(--muted);font-weight:400;margin-top:3px}
+
+/* phone frame */
+.phone{width:330px;height:690px;border-radius:46px;background:#02070f;padding:11px;box-shadow:0 30px 60px rgba(0,0,0,.5),inset 0 0 0 2px #22344f}
+.screen{position:relative;width:100%;height:100%;border-radius:36px;overflow:hidden;background:var(--deep);display:flex;flex-direction:column}
+.status{height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-size:12px;font-weight:600;flex:none}
+.notch{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:96px;height:24px;background:#000;border-radius:14px;z-index:5}
+.body{flex:1;overflow:hidden;padding:0 16px}
+
+/* header */
+.hero{background:linear-gradient(180deg,#1E6FD9 0%,#13315C 75%,var(--deep) 100%);padding:4px 16px 16px;position:relative;flex:none}
+.hero .top{display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:8px;font-weight:800;letter-spacing:1.6px;font-size:15px}
+.brand .logo{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#fff,#8DC5FF);display:grid;place-items:center}
+.pill{white-space:nowrap;font-size:10px;padding:4px 9px;border-radius:20px;background:rgba(61,220,151,.16);color:var(--green);font-weight:700;border:1px solid rgba(61,220,151,.35)}
+.icon-btn{width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.12);display:grid;place-items:center}
+.flight{margin:14px 0 12px;height:40px;position:relative}
+.flight svg{width:100%;height:40px}
+.cloud{position:absolute;background:rgba(255,255,255,.14);border-radius:30px}
+.search{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:10px 12px;font-size:13px;color:#cfe3ff;display:flex;gap:8px;align-items:center}
+.section{font-size:11px;letter-spacing:1.6px;color:var(--sky);font-weight:700;margin:16px 2px 9px;display:flex;justify-content:space-between}
+.section b{color:var(--muted);font-weight:600}
+
+/* boarding pass */
+.pass{display:flex;background:linear-gradient(135deg,#F4F9FF,#D9ECFF);color:var(--navy);border-radius:16px;margin-bottom:12px;position:relative;box-shadow:0 8px 20px rgba(0,0,0,.25)}
+.pass .main{flex:1;padding:12px 12px 12px 14px}
+.pass .stub{width:68px;border-left:2px dashed rgba(11,37,69,.25);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
+.pass .stub:before,.pass .stub:after{content:"";position:absolute;left:-9px;width:16px;height:16px;border-radius:50%;background:var(--deep)}
+.pass .stub:before{top:-8px}.pass .stub:after{bottom:-8px}
+.stub .n{font-size:24px;font-weight:800;color:var(--azure)}
+.stub .l{font-size:9px;letter-spacing:1.4px;font-weight:700;color:#5b7699}
+.dest{font-size:17px;font-weight:800;letter-spacing:.8px;display:flex;align-items:center;gap:6px}
+.route{display:flex;align-items:center;gap:8px;margin:6px 0 4px;font-weight:800;font-size:13px;color:var(--ocean)}
+.route .ln{flex:1;border-top:1.5px dashed #8fb3dd;position:relative}
+.dates{font-size:11.5px;color:#4a6a91}
+.tags{display:flex;gap:6px;margin-top:8px}
+.tag{font-size:10px;padding:3px 8px;border-radius:12px;font-weight:700}
+.tag.amber{background:#FFE7BF;color:#9a5a00}
+.tag.blue{background:#cfe3ff;color:#1650a5}
+.tag.green{background:#c9f5e2;color:#0b7a4b}
+.tag.grey{background:#e2e9f2;color:#5b6f88}
+.pass.dim{opacity:.62}
+.fab{position:absolute;right:16px;bottom:22px;background:linear-gradient(135deg,var(--azure2),var(--azure));padding:13px 18px;border-radius:30px;font-weight:700;font-size:13.5px;box-shadow:0 10px 24px rgba(30,111,217,.55);display:flex;gap:6px;align-items:center}
+
+/* trip folder */
+.appbar{display:flex;align-items:center;gap:10px;padding:6px 16px 0}
+.appbar .t{flex:1;min-width:0}
+.appbar .t h2{font-size:19px;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.appbar .t p{font-size:11.5px;color:var(--sky);margin-top:2px}
+.endbtn{font-size:11px;font-weight:700;padding:6px 10px;border-radius:10px;background:rgba(255,181,71,.15);color:var(--amber);border:1px solid rgba(255,181,71,.35)}
+.ess{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tile{background:linear-gradient(160deg,#1E6FD9,#13315C);border-radius:14px;padding:10px 8px;text-align:center;border:1px solid rgba(141,197,255,.3)}
+.tile .th{height:52px;border-radius:8px;background:#F4F9FF;margin-bottom:7px;display:grid;place-items:center;font-size:24px;position:relative;overflow:hidden}
+.tile .th:after{content:"";position:absolute;left:8px;right:8px;bottom:8px;height:3px;background:#cfdcec;border-radius:2px;box-shadow:0 -6px 0 #cfdcec,0 -12px 0 #e1e9f3}
+.tile span{font-size:11px;font-weight:700}
+.folder{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:8px;overflow:hidden}
+.fh{display:flex;align-items:center;gap:10px;padding:10px 12px}
+.fi{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:rgba(61,139,255,.16)}
+.fh .nm{flex:1;font-weight:700;font-size:13.5px}
+.fh .ct{font-size:11px;color:var(--muted);background:rgba(255,255,255,.06);padding:2px 8px;border-radius:10px}
+.fh .ch{color:var(--muted);font-size:12px}
+.doc{display:flex;align-items:center;gap:10px;padding:9px 12px;border-top:1px solid var(--line)}
+.doc .dt{width:30px;height:36px;border-radius:5px;background:#F4F9FF;color:#c0392b;font-size:8px;font-weight:800;display:grid;place-items:center}
+.doc .dn{flex:1;font-size:12.5px;font-weight:600}
+.doc .dn small{display:block;color:var(--sky);font-weight:500;font-size:10.5px;margin-top:2px;font-family:ui-monospace,Menlo,monospace}
+.star{color:var(--amber)}
+.bar{position:absolute;left:0;right:0;bottom:0;padding:12px 16px 22px;background:linear-gradient(0deg,var(--deep) 70%,transparent);display:flex;gap:10px}
+.btn{flex:1;text-align:center;padding:13px 0;border-radius:14px;font-weight:700;font-size:13.5px}
+.btn.ghost{background:rgba(141,197,255,.12);border:1px solid rgba(141,197,255,.35);color:var(--mist)}
+.btn.primary{background:linear-gradient(135deg,var(--azure2),var(--azure));box-shadow:0 8px 18px rgba(30,111,217,.45)}
+.btn.danger{background:rgba(255,107,107,.14);border:1px solid rgba(255,107,107,.45);color:#ff9a9a}
+.btn.disabled{opacity:.35}
+
+/* sheet */
+.scrim{position:absolute;inset:0;background:rgba(2,8,18,.62)}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#0f2748;border-radius:24px 24px 0 0;padding:10px 16px 22px;border-top:1px solid rgba(141,197,255,.3)}
+.grab{width:40px;height:5px;border-radius:3px;background:rgba(255,255,255,.25);margin:0 auto 12px}
+.sheet h3{font-size:16px;margin-bottom:12px}
+.preview{height:118px;border-radius:12px;background:#F4F9FF;display:flex;align-items:center;justify-content:center;margin-bottom:12px;position:relative;overflow:hidden}
+.ticket{width:78%;height:78px;border-radius:8px;background:#fff;border:1px solid #d3e1f2;display:flex;color:var(--navy);font-size:9px}
+.ticket .a{flex:1;padding:8px}.ticket .b{width:54px;border-left:1px dashed #b7c9df;padding:8px}
+.ticket b{font-size:15px;display:block;margin:3px 0}
+.lbl{font-size:10.5px;color:var(--muted);letter-spacing:1px;font-weight:700;margin:9px 0 5px}
+.input{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:11px;padding:10px 12px;font-size:13px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:11.5px;padding:6px 10px;border-radius:20px;background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--mist)}
+.chip.on{background:var(--azure);border-color:var(--azure2);color:#fff;font-weight:700}
+.two{display:grid;grid-template-columns:1.3fr 1fr;gap:8px}
+.toggle{display:flex;align-items:center;gap:10px;margin:12px 0 14px;font-size:13px}
+.sw{width:38px;height:22px;border-radius:12px;background:var(--amber);position:relative}
+.sw:after{content:"";position:absolute;right:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff}
+
+/* officer */
+.officer{background:#fff;color:#111}
+.otop{display:flex;align-items:center;justify-content:space-between;padding:6px 14px 10px;background:#0B2545;color:#fff}
+.otop .x{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.15);display:grid;place-items:center}
+.awake{font-size:10.5px;font-weight:700;background:rgba(255,181,71,.2);color:var(--amber);padding:4px 9px;border-radius:12px}
+.visa{margin:14px;border:1.5px solid #c9d6e6;border-radius:10px;padding:14px;flex:1;background:linear-gradient(180deg,#fff,#f3f8ff);position:relative;overflow:hidden}
+.visa .hd{font-size:9px;letter-spacing:2px;color:#1650a5;font-weight:800;text-align:center}
+.visa h4{text-align:center;font-size:14px;margin:4px 0 10px;color:#0B2545}
+.visa .ph{width:70px;height:86px;background:linear-gradient(180deg,#dfe8f4,#c3d3e8);border-radius:6px;float:left;margin-right:12px;display:grid;place-items:end center;overflow:hidden}
+.visa .ph i{display:block;width:44px;height:52px;border-radius:22px 22px 0 0;background:#9fb5d1}
+.kv{font-size:9.5px;color:#334;line-height:1.75}
+.kv b{display:inline-block;width:64px;color:#7a8aa0;font-weight:600}
+.mrz{clear:both;margin-top:16px;font-family:ui-monospace,Menlo,monospace;font-size:8.6px;letter-spacing:.6px;color:#222;background:#eef3fa;padding:7px;border-radius:5px;line-height:1.5}
+.seal{position:absolute;right:16px;bottom:62px;width:58px;height:58px;border-radius:50%;border:2px solid rgba(30,111,217,.35);color:rgba(30,111,217,.5);font-size:8px;font-weight:800;display:grid;place-items:center;transform:rotate(-14deg);text-align:center}
+.oct{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 22px;background:#0B2545;color:#fff;font-size:12.5px}
+.oct .g{display:flex;gap:8px}
+.oct .c{width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.12);display:grid;place-items:center;font-weight:800}
+
+/* end trip */
+.step{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px}
+.step .sh{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.num{width:24px;height:24px;border-radius:50%;background:var(--azure);display:grid;place-items:center;font-size:12px;font-weight:800}
+.num.ok{background:var(--green);color:#05331f}
+.step .sh b{font-size:13.5px}
+.step p{font-size:11.5px;color:var(--muted);margin:-4px 0 10px 34px}
+.check{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--green);margin:0 0 10px 34px;font-weight:600}
+.summary{display:flex;gap:8px;margin-bottom:12px}
+.summary div{flex:1;background:rgba(255,255,255,.05);border-radius:12px;padding:10px;text-align:center}
+.summary b{display:block;font-size:18px;color:var(--sky)}
+.summary span{font-size:10px;color:var(--muted);letter-spacing:1px}
+.zipline{font-family:ui-monospace,Menlo,monospace;font-size:10.5px;color:var(--sky);margin:0 0 10px 34px;line-height:1.6}
+
+.redc{--red:#D62839}
+.todohead{display:flex;justify-content:space-between;align-items:center;font-size:11px;letter-spacing:1.6px;font-weight:800;color:var(--sky);margin:14px 2px 8px}
+.todohead b{color:var(--sky);font-size:11.5px;letter-spacing:.3px}
+.grp{font-size:10px;letter-spacing:1.4px;font-weight:800;margin:8px 4px 5px;display:flex;align-items:center;gap:6px}
+.grp.u{color:#ff6b7a}.grp.n{color:var(--sky)}.grp.d{color:var(--muted)}.grp.c{color:var(--muted)}
+.task{display:flex;gap:10px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px 10px;margin-bottom:6px}
+.task.urg{border-color:rgba(214,40,57,.6);background:linear-gradient(90deg,rgba(214,40,57,.22),rgba(214,40,57,.06));border-left:4px solid #D62839}
+.task.del{opacity:.55}
+.circ{width:20px;height:20px;border-radius:50%;border:2px solid var(--sky);flex:none;margin-top:1px}
+.task.urg .circ{border-color:#ff6b7a}
+.tt{flex:1;min-width:0}
+.tt b{display:block;font-size:12.5px;font-weight:700}
+.tt small{display:block;font-size:10px;color:var(--sky);margin-top:2px}
+.task.urg .tt small{color:#ffb3bb}
+.flag{font-size:9px;font-weight:900;padding:2px 6px;border-radius:8px;background:#D62839;color:#fff;letter-spacing:.6px;align-self:center}
+.notecard{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:12px;padding:8px 11px;font-size:11.5px}
+.notecard b{color:var(--amber);font-size:9.5px;letter-spacing:.6px;display:block}
+.badge-u{font-size:9.5px;font-weight:900;background:#D62839;color:#fff;padding:3px 7px;border-radius:10px}
+.prio{display:flex;gap:7px}
+.prio span{flex:1;text-align:center;padding:9px 0;border-radius:12px;font-size:12px;font-weight:800;border:1px solid var(--line);background:rgba(255,255,255,.05)}
+.prio .u.on{background:#D62839;border-color:#ff6b7a;color:#fff}
+.hintbox{margin-top:10px;font-size:11px;line-height:1.45;padding:9px 11px;border-radius:11px;background:rgba(214,40,57,.14);border:1px solid rgba(214,40,57,.45);color:#ffc2c8}
+.alarm{background:radial-gradient(420px 300px at 50% 30%,#ff4a5c 0,#D62839 45%,#8f0f1c 100%);color:#fff;text-align:center;display:flex;flex-direction:column}
+.alarm .clock{font-size:54px;font-weight:200;margin-top:24px;letter-spacing:1px}
+.alarm .date{font-size:13px;opacity:.85}
+.ring{width:96px;height:96px;border-radius:50%;margin:26px auto 14px;display:grid;place-items:center;background:rgba(255,255,255,.16);box-shadow:0 0 0 14px rgba(255,255,255,.08),0 0 0 30px rgba(255,255,255,.05);font-size:44px}
+.alarm .lbl2{font-size:12px;font-weight:900;letter-spacing:3px}
+.alarm h2{font-size:22px;margin:10px 18px 6px;line-height:1.2}
+.alarm .trip{font-size:13.5px;opacity:.92}
+.alarm .rep{font-size:11px;opacity:.75;margin-top:8px}
+.alarm .acts{margin-top:auto;padding:0 18px 30px;display:flex;flex-direction:column;gap:10px}
+.alarm .done{background:#fff;color:#B01E2E;font-weight:900;font-size:17px;padding:16px;border-radius:30px;box-shadow:0 10px 24px rgba(0,0,0,.25)}
+.alarm .snz{border:1.5px solid rgba(255,255,255,.6);font-weight:700;padding:13px;border-radius:30px;font-size:14px}
+.lock{background:linear-gradient(180deg,#0e2a52,#081a33 60%,#050f20);display:flex;flex-direction:column}
+.lock .clock{font-size:58px;font-weight:200;text-align:center;margin-top:30px}
+.lock .date{text-align:center;font-size:13px;color:var(--mist);margin-bottom:22px}
+.ntf{margin:0 12px 10px;background:rgba(244,249,255,.95);color:#0B2545;border-radius:20px;padding:11px 13px}
+.ntf .h{display:flex;align-items:center;gap:7px;font-size:10.5px;color:#5b7699;font-weight:600}
+.ntf .ic{width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg,#3D8BFF,#0B2545);display:grid;place-items:center;color:#fff;font-size:11px}
+.ntf b{display:block;font-size:13px;margin-top:6px}
+.ntf p{font-size:12px;color:#334;margin-top:2px}
+.ntf .ab{display:flex;gap:18px;margin-top:9px;font-size:12px;font-weight:800;color:#1E6FD9}
+.ntf.u{border-left:5px solid #D62839}
+.ntf.u b{color:#B01E2E}
+.lock .foot{margin-top:auto;text-align:center;font-size:11px;color:var(--muted);padding-bottom:28px}
+
+.ico{display:block;flex:none}
+.chip-ic{display:grid;place-items:center;border-radius:12px;color:#fff;flex:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 4px 10px rgba(0,0,0,.25)}
+.appbar .icon-btn{display:grid;place-items:center}
+.endbtn{display:flex;align-items:center;gap:5px}
+.tabs{display:flex;margin:12px -16px 0;padding:6px 6px 8px;border-bottom:1px solid var(--line);background:rgba(8,26,51,.55)}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.2px}
+.tab .pill{background:none;border:0;padding:0;letter-spacing:0;font-size:inherit;color:inherit;position:relative;width:56px;height:30px;border-radius:16px;display:grid;place-items:center;transition:.2s}
+.tab.on{color:#fff}
+.tab.on .pill{background:linear-gradient(135deg,rgba(61,139,255,.45),rgba(30,111,217,.35));box-shadow:inset 0 0 0 1px rgba(141,197,255,.35);color:#fff}
+.tab .bdg{position:absolute;top:-3px;right:5px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;font-size:10px;font-weight:900;display:grid;place-items:center;background:#2a4a7a;color:#cfe3ff;border:2px solid #0d2140}
+.tab .bdg.red{background:#E5233A;color:#fff}
+.glance{display:flex;gap:8px;margin:14px 0 4px}
+.glance>div{flex:1;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:9px 8px;display:flex;align-items:center;gap:8px}
+.glance .gi{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;flex:none}
+.glance .gt{display:block;min-width:0}.glance b{display:block;font-size:16px;line-height:1}
+.glance span{font-size:9px;letter-spacing:.8px;color:var(--muted);font-weight:800}
+.ess2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.ess2 .t{background:var(--card);border:1px solid rgba(141,197,255,.22);border-radius:16px;padding:8px;position:relative}
+.ess2 .th{height:112px;border-radius:11px;background:#F4F9FF;position:relative;overflow:hidden;margin-bottom:8px}
+.ess2 .th:after{content:"";position:absolute;left:12px;right:12px;top:22px;height:5px;background:#cfdcec;border-radius:3px;box-shadow:0 12px 0 #dbe6f3,0 24px 0 #dbe6f3,0 36px 0 #e6eef8,0 48px 0 #e6eef8}
+.ess2 .badge-c{position:absolute;left:14px;bottom:52px;z-index:2}
+.ess2 .row2{display:flex;align-items:center;gap:6px}
+.ess2 b{font-size:12.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ess2 small{font-size:10px;color:var(--sky);display:flex;align-items:center;gap:3px;margin-top:2px}
+.hintpin{margin-top:12px;font-size:11px;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:5px}
+.bar1{position:absolute;left:0;right:0;bottom:0;padding:12px 16px 22px;background:linear-gradient(0deg,var(--deep) 70%,transparent);display:flex;gap:10px}
+.bar1 .btn{display:flex;align-items:center;justify-content:center;gap:7px}
+.grp{display:flex;align-items:center;gap:6px}
+.task{align-items:center}
+.task .tt small{display:flex;align-items:center;gap:4px}
+.circ{display:grid;place-items:center}
+.notecard3{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 11px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start}
+.notecard3 b{font-size:10px;letter-spacing:.7px;display:block;margin-bottom:3px}
+.notecard3 p{font-size:12.5px;line-height:1.4}
+.folder .fh{display:flex;align-items:center;gap:11px}
+.doc .dt{background:#fff;color:#E5233A}
+.star2{color:var(--amber)}
+.legend{display:flex;gap:22px;justify-content:center;margin:34px auto 0;flex-wrap:wrap}.lg{display:flex;flex-direction:column;align-items:center;gap:7px;font-size:12px;color:var(--mist);font-weight:600}</style>
+</head>
+<body><div class="title"><h1>TRIP <span>TABS</span> · MODERN ICONS</h1><p>Line icons · colour-coded folders · Material-style tab bar</p></div>
+<div class="row"><div><div class="phone"><div class="screen" style="background:linear-gradient(180deg,#13315C 0,var(--deep) 150px)">
+<div class="notch"></div><div class="status"><span>9:41</span><span>▮▮▮</span></div>
+<div class="appbar"><div class="icon-btn"><svg class="ico " width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7" />
+  <path d="M19 12H5" /></svg></div><div class="t"><h2>🇨🇱 Patagonia</h2><p>29 Nov – 10 Dec 2026 · in 20 days</p></div><div class="icon-btn"><svg class="ico " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
+  <path d="m15 5 4 4" /></svg></div><div class="endbtn"><svg class="ico " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 22V2l10 5-10 5" /></svg>End trip</div></div>
+<div class="body"><div class="tabs"><div class="tab on"><span class="pill"><svg class="ico " width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" /></svg></span>Essentials</div><div class="tab "><span class="pill"><svg class="ico " width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 17 2 2 4-4" />
+  <path d="m3 7 2 2 4-4" />
+  <path d="M13 6h8" />
+  <path d="M13 12h8" />
+  <path d="M13 18h8" /></svg><span class="bdg red">2</span></span>To-Do</div><div class="tab "><span class="pill"><svg class="ico " width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4" />
+  <path d="M2 6h4" />
+  <path d="M2 10h4" />
+  <path d="M2 14h4" />
+  <path d="M2 18h4" />
+  <path d="M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z" /></svg><span class="bdg">3</span></span>Notes</div><div class="tab "><span class="pill"><svg class="ico " width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2" /></svg><span class="bdg">8</span></span>Folders</div></div><div class="glance">
+<div><span class="gi" style="background:rgba(229,35,58,.18);color:#ff6b7a"><svg class="ico " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8" />
+  <path d="M12 9v4l2 2" />
+  <path d="M5 3 2 6" />
+  <path d="m22 6-3-3" />
+  <path d="M6.38 18.7 4 21" />
+  <path d="M17.64 18.67 20 21" /></svg></span><span class="gt"><b style="color:#ff8a96">2</b><span>URGENT</span></span></div>
+<div><span class="gi" style="background:rgba(61,139,255,.18);color:#8DC5FF"><svg class="ico " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+  <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+  <path d="M10 9H8" />
+  <path d="M16 13H8" />
+  <path d="M16 17H8" /></svg></span><span class="gt"><b>8</b><span>DOCS</span></span></div>
+<div><span class="gi" style="background:rgba(255,181,71,.18);color:#FFB547"><svg class="ico " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v4" />
+  <path d="M16 2v4" />
+  <rect width="18" height="18" x="3" y="4" rx="2" />
+  <path d="M3 10h18" />
+  <path d="M8 14h.01" />
+  <path d="M12 14h.01" />
+  <path d="M16 14h.01" />
+  <path d="M8 18h.01" />
+  <path d="M12 18h.01" />
+  <path d="M16 18h.01" /></svg></span><span class="gt"><b>20</b><span>DAYS</span></span></div></div><div class="ess2"><div class="t"><div class="th"></div><span class="badge-c"><span class="chip-ic" style="width:30px;height:30px;background:linear-gradient(145deg,#818CF8,#6366F1)"><svg class="ico " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 13a3 3 0 1 0-6 0" />
+  <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20" />
+  <circle cx="12" cy="8" r="2" /></svg></span></span><div class="row2"><div style="min-width:0"><b>Passport</b><small><svg class="ico star2" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" /></svg>Tap to show</small></div></div></div><div class="t"><div class="th"></div><span class="badge-c"><span class="chip-ic" style="width:30px;height:30px;background:linear-gradient(145deg,#2DD4BF,#0D9488)"><svg class="ico " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 22h14" />
+  <path d="M19.27 13.73A2.5 2.5 0 0 0 17.5 13h-11A2.5 2.5 0 0 0 4 15.5V17a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-1.5c0-.66-.26-1.3-.73-1.77Z" />
+  <path d="M14 13V8.5C14 7 15 7 15 5a3 3 0 0 0-3-3c-1.66 0-3 1-3 3s1 2 1 3.5V13" /></svg></span></span><div class="row2"><div style="min-width:0"><b>EVISA</b><small><svg class="ico star2" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" /></svg>Tap to show</small></div></div></div><div class="t"><div class="th"></div><span class="badge-c"><span class="chip-ic" style="width:30px;height:30px;background:linear-gradient(145deg,#60A5FA,#2563EB)"><svg class="ico " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" /></svg></span></span><div class="row2"><div style="min-width:0"><b>Doha - Chile - Doha</b><small><svg class="ico star2" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" /></svg>Tap to show</small></div></div></div><div class="t"><div class="th"></div><span class="badge-c"><span class="chip-ic" style="width:30px;height:30px;background:linear-gradient(145deg,#60A5FA,#2563EB)"><svg class="ico " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" /></svg></span></span><div class="row2"><div style="min-width:0"><b>SCL - PNT</b><small><svg class="ico star2" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" /></svg>Tap to show</small></div></div></div></div><div class="hintpin"><svg class="ico " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5" />
+  <path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z" /></svg>Pin more: ⋯ on any document › Pin to Essentials</div></div>
+<div class="bar1"><div class="btn ghost"><svg class="ico " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+  <circle cx="12" cy="13" r="3" /></svg>Scan</div><div class="btn primary"><svg class="ico " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" />
+  <path d="M12 5v14" /></svg>Add files</div></div></div></div><div class="cap">1 · Essentials<small>Big tiles for the counter</small></div></div><div><div class="phone"><div class="screen" style="background:linear-gradient(180deg,#13315C 0,var(--deep) 150px)">
+<div class="notch"></div><div class="status"><span>9:41</span><span>▮▮▮</span></div>
+<div class="appbar"><div class="icon-btn"><svg class="ico " width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7" />
+  <path d="M19 12H5" /></svg></div><div class="t"><h2>🇨🇱 Patagonia</h2><p>29 Nov – 10 Dec 2026 · in 20 days</p></div><div class="icon-btn"><svg class="ico " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
+  <path d="m15 5 4 4" /></svg></div><div class="endbtn"><svg class="ico " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 22V2l10 5-10 5" /></svg>End trip</div></div>
+<div class="body"><div class="tabs"><div class="tab "><span class="pill"><svg class="ico " width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" /></svg></span>Essentials</div><div class="tab on"><span class="pill"><svg class="ico " width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 17 2 2 4-4" />
+  <path d="m3 7 2 2 4-4" />
+  <path d="M13 6h8" />
+  <path d="M13 12h8" />
+  <path d="M13 18h8" /></svg><span class="bdg red">2</span></span>To-Do</div><div class="tab "><span class="pill"><svg class="ico " width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4" />
+  <path d="M2 6h4" />
+  <path d="M2 10h4" />
+  <path d="M2 14h4" />
+  <path d="M2 18h4" />
+  <path d="M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z" /></svg><span class="bdg">3</span></span>Notes</div><div class="tab "><span class="pill"><svg class="ico " width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2" /></svg><span class="bdg">8</span></span>Folders</div></div><div class="grp u" style="margin-top:14px"><svg class="ico " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18v-6a5 5 0 1 1 10 0v6" />
+  <path d="M5 21a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2z" />
+  <path d="M21 12h1" />
+  <path d="M18.5 4.5 18 5" />
+  <path d="M2 12h1" />
+  <path d="M12 2v1" />
+  <path d="m4.929 4.929.707.707" />
+  <path d="M12 12v6" /></svg>URGENT · 2</div><div class="task urg"><div class="circ"></div><div class="tt"><b>Buy Entel eSIM</b><small><svg class="ico " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8" />
+  <path d="M12 9v4l2 2" />
+  <path d="M5 3 2 6" />
+  <path d="m22 6-3-3" />
+  <path d="M6.38 18.7 4 21" />
+  <path d="M17.64 18.67 20 21" /></svg>27 Nov 09:00 · every 6 h until done</small></div><span class="flag">URGENT</span></div><div class="task urg"><div class="circ"></div><div class="tt"><b>Print visa copy</b><small><svg class="ico " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8" />
+  <path d="M12 9v4l2 2" />
+  <path d="M5 3 2 6" />
+  <path d="m22 6-3-3" />
+  <path d="M6.38 18.7 4 21" />
+  <path d="M17.64 18.67 20 21" /></svg>27 Nov 09:00 · every 6 h until done</small></div><span class="flag">URGENT</span></div>
+<div class="grp n"><svg class="ico " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+  <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>NORMAL · 1</div><div class="task"><div class="circ"></div><div class="tt"><b>Exchange CLP 200,000</b><small><svg class="ico " width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8" />
+  <path d="M12 9v4l2 2" />
+  <path d="M5 3 2 6" />
+  <path d="m22 6-3-3" />
+  <path d="M6.38 18.7 4 21" />
+  <path d="M17.64 18.67 20 21" /></svg>28 Nov 18:00</small></div></div>
+<div class="grp d"><svg class="ico " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" />
+  <line x1="10" x2="10" y1="15" y2="9" />
+  <line x1="14" x2="14" y1="15" y2="9" /></svg>DELAYED · 1</div><div class="task del"><div class="circ" style="border-color:var(--muted)"></div><div class="tt"><b>Book Torres del Paine tour</b><small style="color:var(--muted)">No reminders</small></div></div>
+<div class="grp c"><svg class="ico " width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" />
+  <path d="m9 12 2 2 4-4" /></svg>COMPLETED · 2 ▸</div></div>
+<div class="bar1"><div class="btn primary"><svg class="ico " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" />
+  <path d="M12 5v14" /></svg>Add task</div></div></div></div><div class="cap">2 · To-Do<small>Red badge = urgent tasks</small></div></div><div><div class="phone"><div class="screen" style="background:linear-gradient(180deg,#13315C 0,var(--deep) 150px)">
+<div class="notch"></div><div class="status"><span>9:41</span><span>▮▮▮</span></div>
+<div class="appbar"><div class="icon-btn"><svg class="ico " width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7" />
+  <path d="M19 12H5" /></svg></div><div class="t"><h2>🇨🇱 Patagonia</h2><p>29 Nov – 10 Dec 2026 · in 20 days</p></div><div class="icon-btn"><svg class="ico " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
+  <path d="m15 5 4 4" /></svg></div><div class="endbtn"><svg class="ico " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 22V2l10 5-10 5" /></svg>End trip</div></div>
+<div class="body"><div class="tabs"><div class="tab "><span class="pill"><svg class="ico " width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" /></svg></span>Essentials</div><div class="tab "><span class="pill"><svg class="ico " width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 17 2 2 4-4" />
+  <path d="m3 7 2 2 4-4" />
+  <path d="M13 6h8" />
+  <path d="M13 12h8" />
+  <path d="M13 18h8" /></svg><span class="bdg red">2</span></span>To-Do</div><div class="tab on"><span class="pill"><svg class="ico " width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4" />
+  <path d="M2 6h4" />
+  <path d="M2 10h4" />
+  <path d="M2 14h4" />
+  <path d="M2 18h4" />
+  <path d="M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z" /></svg><span class="bdg">3</span></span>Notes</div><div class="tab "><span class="pill"><svg class="ico " width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2" /></svg><span class="bdg">8</span></span>Folders</div></div><div style="height:14px"></div><div class="notecard3"><span class="chip-ic" style="width:32px;height:32px;border-radius:10px;background:linear-gradient(145deg,#3B82F6cc,#3B82F6)"><svg class="ico " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="20" x="5" y="2" rx="2" ry="2" />
+  <path d="M12 18h.01" /></svg></span><div><b style="color:#3B82F6">SIM / ESIM</b><p>Best SIM to take: Entel prepaid at SCL arrivals, ask for 'Bolsa' data pack</p></div></div><div class="notecard3"><span class="chip-ic" style="width:32px;height:32px;border-radius:10px;background:linear-gradient(145deg,#16A34Acc,#16A34A)"><svg class="ico " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="12" x="2" y="6" rx="2" />
+  <circle cx="12" cy="12" r="2" />
+  <path d="M6 12h.01M18 12h.01" /></svg></span><div><b style="color:#16A34A">MONEY</b><p>Chilean peso (CLP). Cards accepted widely; carry cash for Torres del Paine park entry</p></div></div><div class="notecard3"><span class="chip-ic" style="width:32px;height:32px;border-radius:10px;background:linear-gradient(145deg,#E5233Acc,#E5233A)"><svg class="ico " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18v-6a5 5 0 1 1 10 0v6" />
+  <path d="M5 21a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2z" />
+  <path d="M21 12h1" />
+  <path d="M18.5 4.5 18 5" />
+  <path d="M2 12h1" />
+  <path d="M12 2v1" />
+  <path d="m4.929 4.929.707.707" />
+  <path d="M12 12v6" /></svg></span><div><b style="color:#E5233A">EMERGENCY</b><p>Carabineros (police) 133 · Ambulance 131 · Fire 132</p></div></div></div>
+<div class="bar1"><div class="btn primary"><svg class="ico " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" />
+  <path d="M12 5v14" /></svg>Add note</div></div></div></div><div class="cap">3 · Notes<small>Things to remember</small></div></div><div><div class="phone"><div class="screen" style="background:linear-gradient(180deg,#13315C 0,var(--deep) 150px)">
+<div class="notch"></div><div class="status"><span>9:41</span><span>▮▮▮</span></div>
+<div class="appbar"><div class="icon-btn"><svg class="ico " width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7" />
+  <path d="M19 12H5" /></svg></div><div class="t"><h2>🇨🇱 Patagonia</h2><p>29 Nov – 10 Dec 2026 · in 20 days</p></div><div class="icon-btn"><svg class="ico " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
+  <path d="m15 5 4 4" /></svg></div><div class="endbtn"><svg class="ico " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 22V2l10 5-10 5" /></svg>End trip</div></div>
+<div class="body"><div class="tabs"><div class="tab "><span class="pill"><svg class="ico " width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" /></svg></span>Essentials</div><div class="tab "><span class="pill"><svg class="ico " width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 17 2 2 4-4" />
+  <path d="m3 7 2 2 4-4" />
+  <path d="M13 6h8" />
+  <path d="M13 12h8" />
+  <path d="M13 18h8" /></svg><span class="bdg red">2</span></span>To-Do</div><div class="tab "><span class="pill"><svg class="ico " width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4" />
+  <path d="M2 6h4" />
+  <path d="M2 10h4" />
+  <path d="M2 14h4" />
+  <path d="M2 18h4" />
+  <path d="M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z" /></svg><span class="bdg">3</span></span>Notes</div><div class="tab on"><span class="pill"><svg class="ico " width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2" /></svg><span class="bdg">8</span></span>Folders</div></div><div style="height:12px"></div><div class="folder"><div class="fh"><span class="chip-ic" style="width:36px;height:36px;background:linear-gradient(145deg,#2DD4BF,#0D9488)"><svg class="ico " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 22h14" />
+  <path d="M19.27 13.73A2.5 2.5 0 0 0 17.5 13h-11A2.5 2.5 0 0 0 4 15.5V17a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-1.5c0-.66-.26-1.3-.73-1.77Z" />
+  <path d="M14 13V8.5C14 7 15 7 15 5a3 3 0 0 0-3-3c-1.66 0-3 1-3 3s1 2 1 3.5V13" /></svg></span><div class="nm">Visa</div><span class="ct">1</span><span class="ch">▾</span></div><div class="doc"><div class="dt">PDF</div><div class="dn">EVISA<small>29 Nov · 849 KB</small></div><svg class="ico star2" width="15" height="15" viewBox="0 0 24 24" fill="#FFB547" stroke="currentColor" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" /></svg></div></div><div class="folder"><div class="fh"><span class="chip-ic" style="width:36px;height:36px;background:linear-gradient(145deg,#60A5FA,#2563EB)"><svg class="ico " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" /></svg></span><div class="nm">Flights</div><span class="ct">3</span><span class="ch">▾</span></div><div class="doc"><div class="dt">PDF</div><div class="dn">Doha - Chile - Doha<small>29 Nov · 242 KB</small></div><svg class="ico star2" width="15" height="15" viewBox="0 0 24 24" fill="#FFB547" stroke="currentColor" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" /></svg></div><div class="doc"><div class="dt">PDF</div><div class="dn">SCL - PNT<small>29 Nov · 61 KB</small></div><svg class="ico star2" width="15" height="15" viewBox="0 0 24 24" fill="#FFB547" stroke="currentColor" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" /></svg></div></div><div class="folder"><div class="fh"><span class="chip-ic" style="width:36px;height:36px;background:linear-gradient(145deg,#C084FC,#9333EA)"><svg class="ico " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8" />
+  <path d="M4 10V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4" />
+  <path d="M12 4v6" />
+  <path d="M2 18h20" /></svg></span><div class="nm">Hotels</div><span class="ct">2</span><span class="ch">▸</span></div></div><div class="folder"><div class="fh"><span class="chip-ic" style="width:36px;height:36px;background:linear-gradient(145deg,#818CF8,#6366F1)"><svg class="ico " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 13a3 3 0 1 0-6 0" />
+  <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20" />
+  <circle cx="12" cy="8" r="2" /></svg></span><div class="nm">Passport / ID</div><span class="ct">1</span><span class="ch">▸</span></div></div><div class="folder"><div class="fh"><span class="chip-ic" style="width:36px;height:36px;background:linear-gradient(145deg,#4ADE80,#16A34A)"><svg class="ico " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+  <path d="m9 12 2 2 4-4" /></svg></span><div class="nm">Insurance</div><span class="ct">1</span><span class="ch">▸</span></div></div></div>
+<div class="bar1"><div class="btn ghost"><svg class="ico " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+  <circle cx="12" cy="13" r="3" /></svg>Scan</div><div class="btn primary"><svg class="ico " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" />
+  <path d="M12 5v14" /></svg>Add files</div></div></div></div><div class="cap">4 · Folders<small>Colour-coded document types</small></div></div></div><div class="legend"><div class="lg"><span class="chip-ic" style="width:44px;height:44px;background:linear-gradient(145deg,#818CF8,#6366F1)"><svg class="ico " width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 13a3 3 0 1 0-6 0" />
+  <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20" />
+  <circle cx="12" cy="8" r="2" /></svg></span><span>Passport / ID</span></div><div class="lg"><span class="chip-ic" style="width:44px;height:44px;background:linear-gradient(145deg,#2DD4BF,#0D9488)"><svg class="ico " width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 22h14" />
+  <path d="M19.27 13.73A2.5 2.5 0 0 0 17.5 13h-11A2.5 2.5 0 0 0 4 15.5V17a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-1.5c0-.66-.26-1.3-.73-1.77Z" />
+  <path d="M14 13V8.5C14 7 15 7 15 5a3 3 0 0 0-3-3c-1.66 0-3 1-3 3s1 2 1 3.5V13" /></svg></span><span>Visa</span></div><div class="lg"><span class="chip-ic" style="width:44px;height:44px;background:linear-gradient(145deg,#60A5FA,#2563EB)"><svg class="ico " width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" /></svg></span><span>Flights</span></div><div class="lg"><span class="chip-ic" style="width:44px;height:44px;background:linear-gradient(145deg,#C084FC,#9333EA)"><svg class="ico " width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8" />
+  <path d="M4 10V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4" />
+  <path d="M12 4v6" />
+  <path d="M2 18h20" /></svg></span><span>Hotels</span></div><div class="lg"><span class="chip-ic" style="width:44px;height:44px;background:linear-gradient(145deg,#4ADE80,#16A34A)"><svg class="ico " width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+  <path d="m9 12 2 2 4-4" /></svg></span><span>Insurance</span></div><div class="lg"><span class="chip-ic" style="width:44px;height:44px;background:linear-gradient(145deg,#FB923C,#EA580C)"><svg class="ico " width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21 8-2 2-1.5-3.7A2 2 0 0 0 15.646 5H8.4a2 2 0 0 0-1.903 1.257L5 10 3 8" />
+  <path d="M7 14h.01" />
+  <path d="M17 14h.01" />
+  <rect width="18" height="8" x="3" y="10" rx="2" />
+  <path d="M5 18v2" />
+  <path d="M19 18v2" /></svg></span><span>Transport</span></div><div class="lg"><span class="chip-ic" style="width:44px;height:44px;background:linear-gradient(145deg,#F472B6,#DB2777)"><svg class="ico " width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z" />
+  <path d="M15 5.764v15" />
+  <path d="M9 3.236v15" /></svg></span><span>Itinerary</span></div><div class="lg"><span class="chip-ic" style="width:44px;height:44px;background:linear-gradient(145deg,#94A3B8,#475569)"><svg class="ico " width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+  <rect width="20" height="14" x="2" y="6" rx="2" /></svg></span><span>Work / Permits</span></div><div class="lg"><span class="chip-ic" style="width:44px;height:44px;background:linear-gradient(145deg,#CBD5E1,#64748B)"><svg class="ico " width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48" /></svg></span><span>Other</span></div></div></body></html>
