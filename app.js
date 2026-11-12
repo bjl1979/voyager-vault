@@ -1,6 +1,6 @@
 /* Voyager Vault – offline travel document folders (all data stays on this device) */
 'use strict';
-const APP_VERSION = '2.2.2';
+const APP_VERSION = '2.2.3';
 
 const CATS = [
   { id: 'passport',  label: 'Passport / ID',  short: 'Passport',  folder: 'Passport_ID',  ic: 'book-user', c1: '#818CF8', c2: '#6366F1' },
@@ -605,12 +605,21 @@ function openPackItemSheet(t, ref) {
   openSheet(`<h3>Edit item · ${esc(s.name)}</h3>
     <div class="two"><div style="flex:2"><label class="lbl" for="iText">Item</label><input class="input" id="iText" maxlength="80" value="${esc(i.text)}"></div>
     <div><label class="lbl" for="iQty">Quantity</label><input class="input" id="iQty" type="number" min="0" max="999" inputmode="numeric" value="${i.qty || ''}" placeholder="–"></div></div>
+    <span class="lbl">Move to section</span>
+    ${packOf(t).sections.length > 1
+      ? `<div class="qp" id="iMove">${packOf(t).sections.map(x => { const p = presetOf(x.key); return `<button type="button" class="${x.id === s.id ? 'on' : ''}" data-to="${x.id}"><span class="dot" style="background:${p.c2}">${icon(p.ic, 12, 2.4)}</span>${esc(x.name)}</button>`; }).join('')}</div>`
+      : '<p class="sub">Create another section to move items between sections.</p>'}
     <div class="actions"><button class="btn danger" id="iDel">${icon('trash-2', 17)}Delete</button><button class="btn primary" id="iSave">Save</button></div>`,
   sheet => {
+    let to = s.id;
+    $$('#iMove button', sheet).forEach(b => b.onclick = () => { to = b.dataset.to; $$('#iMove button', sheet).forEach(x => x.classList.toggle('on', x === b)); });
     $('#iSave', sheet).onclick = async () => {
       const v = $('#iText', sheet).value.trim(); if (!v) { toast('Type the item name'); return; }
       i.text = v; i.qty = Math.max(0, parseInt($('#iQty', sheet).value, 10) || 0);
+      const dest = to !== s.id ? packOf(t).sections.find(x => x.id === to) : null;
+      if (dest) { s.items = s.items.filter(x => x.id !== i.id); dest.items.push(i); dest.collapsed = false; }
       await savePack(t); await back(); renderTrip(t.id);
+      if (dest) toast(`Moved to ${dest.name}`);
     };
     $('#iDel', sheet).onclick = async () => {
       s.items = s.items.filter(x => x.id !== i.id); await savePack(t); await back(); toast('Item deleted'); renderTrip(t.id);

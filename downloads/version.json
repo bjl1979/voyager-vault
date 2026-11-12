@@ -1,7 +1,7 @@
 {
-  "versionCode": 8,
-  "versionName": "2.2.2",
-  "apk": "https://bjl1979.github.io/voyager-vault/downloads/VoyagerVault-2.2.2.apk",
+  "versionCode": 9,
+  "versionName": "2.2.3",
+  "apk": "https://bjl1979.github.io/voyager-vault/downloads/VoyagerVault-2.2.3.apk",
   "sizeMB": "4.0",
-  "notes": "Tidier document viewer: the page counter stays on one line and the zoom level floats above the buttons."
+  "notes": "Pack tab: move an item to another section (long-press the item, pick the section, Save)."
 }
