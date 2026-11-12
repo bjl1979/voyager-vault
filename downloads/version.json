@@ -1,7 +1,7 @@
 {
-  "versionCode": 10,
-  "versionName": "2.3.0",
-  "apk": "https://bjl1979.github.io/voyager-vault/downloads/VoyagerVault-2.3.0.apk",
+  "versionCode": 11,
+  "versionName": "2.3.1",
+  "apk": "https://bjl1979.github.io/voyager-vault/downloads/VoyagerVault-2.3.1.apk",
   "sizeMB": "4.1",
-  "notes": "Pack tab: export your packing list as a PDF with OUT / BACK tick boxes, sections and quantities. Save it or share it (WhatsApp, Gmail, Drive)."
+  "notes": "Packing list PDF is now a clean checklist: empty OUT / BACK boxes and item counts, without packed totals that go out of date."
 }
