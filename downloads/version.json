@@ -1,7 +1,7 @@
 {
-  "versionCode": 9,
-  "versionName": "2.2.3",
-  "apk": "https://bjl1979.github.io/voyager-vault/downloads/VoyagerVault-2.2.3.apk",
-  "sizeMB": "4.0",
-  "notes": "Pack tab: move an item to another section (long-press the item, pick the section, Save)."
+  "versionCode": 10,
+  "versionName": "2.3.0",
+  "apk": "https://bjl1979.github.io/voyager-vault/downloads/VoyagerVault-2.3.0.apk",
+  "sizeMB": "4.1",
+  "notes": "Pack tab: export your packing list as a PDF with OUT / BACK tick boxes, sections and quantities. Save it or share it (WhatsApp, Gmail, Drive)."
 }

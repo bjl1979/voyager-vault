@@ -1,9 +1,9 @@
 // Voyager Vault service worker – caches the app so it opens with no internet.
 // Your documents are NOT here; they live in the phone's IndexedDB.
-const CACHE = 'voyager-vault-v2.2.3';
+const CACHE = 'voyager-vault-v2.3.0';
 const ASSETS = [
   './', 'index.html', 'styles.css', 'app.js', 'db.js', 'zip.js', 'reminders.js', 'native.js', 'icons.js', 'manifest.webmanifest',
-  'vendor/jszip.min.js', 'vendor/pdf.min.js', 'vendor/pdf.worker.min.js',
+  'vendor/jszip.min.js', 'vendor/pdf.min.js', 'vendor/jspdf.umd.min.js', 'vendor/pdf.worker.min.js',
   'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png',
 ];
 const SHELL = new URL('index.html', self.registration.scope).href;

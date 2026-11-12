@@ -1,6 +1,6 @@
 /* Voyager Vault – offline travel document folders (all data stays on this device) */
 'use strict';
-const APP_VERSION = '2.2.3';
+const APP_VERSION = '2.3.0';
 
 const CATS = [
   { id: 'passport',  label: 'Passport / ID',  short: 'Passport',  folder: 'Passport_ID',  ic: 'book-user', c1: '#818CF8', c2: '#6366F1' },
@@ -167,6 +167,141 @@ function openSheet(html, mount) {
 }
 
 /* ---------------- pdf.js (local, offline) ---------------- */
+let jspdfP;
+function loadJsPdf() {
+  if (!jspdfP) jspdfP = new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = 'vendor/jspdf.umd.min.js';
+    s.onload = () => res(window.jspdf.jsPDF);
+    s.onerror = () => { jspdfP = null; rej(new Error('PDF maker failed to load')); };
+    document.head.append(s);
+  });
+  return jspdfP;
+}
+
+/* ---------------- packing list → PDF ---------------- */
+const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+// the built-in PDF font covers Western European text; drop what it cannot draw (emoji etc.)
+const pdfSafe = s => String(s || '').replace(/[^ -~ -ÿ–—‘’“”•…€]/g, '').replace(/\s+/g, ' ').trim();
+
+async function buildPackPdf(t, blank) {
+  const JsPDF = await loadJsPdf();
+  const doc = new JsPDF({ unit: 'mm', format: 'a4' });
+  const W = 210, H = 297, M = 14, BOT = H - 16;
+  const NAVY = [11, 37, 69], AZURE = [30, 111, 217], MUTED = [110, 128, 150], LINE = [222, 229, 238];
+  const c = packOf(t), st = packStats(t);
+  const packed = c.sections.reduce((n, s) => n + s.items.filter(i => i.packed).length, 0);
+  let y = 0;
+
+  const colHeads = yy => {
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(6.5); doc.setTextColor(...MUTED);
+    doc.text('OUT', M + 2.1, yy, { align: 'center' }); doc.text('BACK', M + 10.1, yy, { align: 'center' });
+    doc.text('ITEM', M + 17, yy); doc.text('QTY', W - M, yy, { align: 'right' });
+  };
+  const header = first => {
+    doc.setFillColor(...NAVY); doc.rect(0, 0, W, first ? 36 : 16, 'F');
+    doc.setFillColor(...AZURE); doc.rect(0, first ? 36 : 16, W, 1.2, 'F');
+    doc.setTextColor(141, 197, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(8);
+    doc.text('VOYAGER VAULT  ·  THINGS TO CARRY', M, first ? 10 : 7);
+    doc.setTextColor(255, 255, 255);
+    if (first) {
+      doc.setFontSize(21); doc.text(pdfSafe(t.destination) || 'Trip', M, 21);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(217, 236, 255);
+      doc.text([pdfSafe(t.country), t.start ? shortRange(t) : '', pdfSafe(t.purpose)].filter(Boolean).join('   ·   '), M, 29);
+      y = 46;
+      if (!blank) {
+        const pct = st.total ? Math.round(packed * 100 / st.total) : 0;
+        doc.setTextColor(...NAVY); doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
+        doc.text(`${packed} of ${st.total} packed  ·  ${pct}%`, M, y);
+        doc.setFillColor(...LINE); doc.roundedRect(W - M - 70, y - 3.6, 70, 4, 2, 2, 'F');
+        if (pct) { doc.setFillColor(43, 182, 115); doc.roundedRect(W - M - 70, y - 3.6, Math.max(4, 70 * pct / 100), 4, 2, 2, 'F'); }
+        y += 8;
+      } else {
+        doc.setTextColor(...MUTED); doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5);
+        doc.text('Tick OUT as you pack, and BACK as each item goes home again.', M, y); y += 8;
+      }
+    } else {
+      doc.setFontSize(12); doc.text(pdfSafe(t.destination), W - M, 10.5, { align: 'right' });
+      y = 25;
+    }
+    colHeads(y); y += 3;
+  };
+  const box = (x, yy, on, col) => {
+    doc.setLineWidth(0.35); doc.setDrawColor(...(on ? col : [150, 165, 185]));
+    if (on) { doc.setFillColor(...col); doc.roundedRect(x, yy, 4.2, 4.2, 0.8, 0.8, 'FD');
+      doc.setDrawColor(255, 255, 255); doc.setLineWidth(0.6); doc.lines([[1.1, 1.1], [2.0, -2.3]], x + 0.9, yy + 2.2); }
+    else doc.roundedRect(x, yy, 4.2, 4.2, 0.8, 0.8, 'S');
+  };
+  const strip = (s, cont) => {
+    const p = presetOf(s.key), rgb = hexRgb(p.c2);
+    doc.setFillColor(...rgb); doc.roundedRect(M, y, W - 2 * M, 8.5, 1.6, 1.6, 'F');
+    doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
+    doc.text(pdfSafe(s.name).toUpperCase() + (cont ? '  (continued)' : ''), M + 3.5, y + 5.8);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5);
+    const n = s.items.filter(i => i.packed).length;
+    doc.text(blank ? `${s.items.length} item${s.items.length === 1 ? '' : 's'}` : `${n}/${s.items.length} packed`, W - M - 3.5, y + 5.8, { align: 'right' });
+    y += 11;
+  };
+  const newPage = () => { doc.addPage(); header(false); };
+
+  header(true);
+  for (const s of c.sections) {
+    const rowsH = s.items.reduce((h, i) => h + Math.max(7, doc.splitTextToSize(pdfSafe(i.text) || '-', W - 2 * M - 34).length * 4.6 + 2.4), 0);
+    if (y + 11 + Math.min(rowsH, 21) > BOT) newPage();          // keep a section's title with its first rows
+    strip(s, false);
+    if (!s.items.length) { doc.setTextColor(...MUTED); doc.setFont('helvetica', 'italic'); doc.setFontSize(9.5); doc.text('No items yet', M + 17, y + 3); y += 8; }
+    for (const i of s.items) {
+      const lines = doc.splitTextToSize(pdfSafe(i.text) || '-', W - 2 * M - 34);
+      const rh = Math.max(7, lines.length * 4.6 + 2.4);
+      if (y + rh > BOT) { newPage(); strip(s, true); }
+      box(M, y, !blank && i.packed, [43, 182, 115]);
+      box(M + 8, y, !blank && i.home, [245, 158, 11]);
+      doc.setTextColor(...NAVY); doc.setFont('helvetica', 'normal'); doc.setFontSize(10.5);
+      doc.text(lines, M + 17, y + 3.3);
+      if (i.qty) { doc.setFont('helvetica', 'bold'); doc.setTextColor(...AZURE); doc.text(`\u00D7${i.qty}`, W - M, y + 3.3, { align: 'right' }); }
+      doc.setDrawColor(...LINE); doc.setLineWidth(0.2); doc.line(M + 17, y + rh - 1.6, W - M, y + rh - 1.6);
+      y += rh;
+    }
+    y += 4;
+  }
+  const pages = doc.getNumberOfPages(), made = fmtDate(todayStr());
+  for (let n = 1; n <= pages; n++) {
+    doc.setPage(n); doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...MUTED);
+    doc.text(`Voyager Vault  ·  made ${made}`, M, H - 8); doc.text(`Page ${n} of ${pages}`, W - M, H - 8, { align: 'right' });
+  }
+  const name = `${ZipIO.safe(t.destination).replace(/ /g, '_')}_Packing_List${blank ? '_blank' : ''}.pdf`;
+  return new File([doc.output('blob')], name, { type: 'application/pdf' });
+}
+
+function openPackPdfSheet(t) {
+  const st = packStats(t);
+  if (!st.total) { toast('Add some items first'); return; }
+  openSheet(`<h3>Packing list PDF · ${esc(t.destination)}</h3>
+    <p class="sub">${packOf(t).sections.length} sections · ${st.total} items · OUT and BACK tick boxes for each item.</p>
+    <span class="lbl">Tick boxes</span>
+    <div class="seg2" id="pdfMode" style="margin-top:4px"><button data-m="ticks" class="on">${icon('check', 14, 2.6)}As packed now</button><button data-m="blank">${icon('file-text', 14, 2.3)}Blank, to print</button></div>
+    <div class="actions">${Native.isApp
+      ? `<button class="btn ghost" id="pdfShare">${icon('share-2', 17)}Share</button><button class="btn primary" id="pdfSave">${icon('file-text', 17)}Save PDF</button>`
+      : `<button class="btn ghost" id="pdfCancel">Cancel</button><button class="btn primary" id="pdfSave">${icon('file-text', 17)}Download PDF</button>`}</div>`,
+  sheet => {
+    let blank = false;
+    $$('#pdfMode button', sheet).forEach(b => b.onclick = () => { blank = b.dataset.m === 'blank'; $$('#pdfMode button', sheet).forEach(x => x.classList.toggle('on', x === b)); });
+    const c = $('#pdfCancel', sheet); if (c) c.onclick = () => back();
+    const run = async (btn, how) => {
+      const label = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Making PDF…';
+      try {
+        const file = await buildPackPdf(t, blank);
+        if (how === 'share') await Native.shareFile(file, `${t.destination} packing list`);
+        else if (Native.isApp) { if (!(await Native.saveFile(file))) { toast('PDF not saved'); return; } }
+        else await downloadFile(file);
+        await back(); toast(how === 'share' ? 'Packing list ready to share' : `✔ Saved ${file.name}`, 3500);
+      } catch (err) { console.error(err); toast('Could not make the PDF: ' + err.message, 4000); }
+      finally { if (btn.isConnected) { btn.disabled = false; btn.innerHTML = label; } }
+    };
+    $('#pdfSave', sheet).onclick = e => run(e.currentTarget, 'save');
+    const sh = $('#pdfShare', sheet); if (sh) sh.onclick = e => run(e.currentTarget, 'share');
+  });
+}
+
 let pdfjsP;
 function loadPdfJs() {
   if (!pdfjsP) pdfjsP = new Promise((res, rej) => {
@@ -206,7 +341,7 @@ async function makeThumb(blob, type) {
 const thumbHTML = d => d.thumb ? `<img src="${d.thumb}" alt="">` : (d.type === 'application/pdf' ? 'PDF' : 'FILE');
 
 /* ---------------- offline status ---------------- */
-const OFFLINE_FILES = 18;
+const OFFLINE_FILES = 19;
 async function offlineStatus() {
   if (Native.isApp) return { supported: true, active: true, files: OFFLINE_FILES, shell: true, cache: 'built into the Android app', app: true };
   const st = { supported: 'serviceWorker' in navigator && 'caches' in window && location.protocol !== 'file:', active: false, files: 0, shell: false, cache: '' };
@@ -461,6 +596,7 @@ async function renderTrip(id, tabArg) {
     else if (d.act === 'newsec') openSectionSheet(t);
     else if (d.act === 'packcopy') openCopyPackSheet(t);
     else if (d.act === 'packreset') resetReturn(t);
+    else if (d.act === 'packpdf') openPackPdfSheet(t);
     else if (d.pmode) setPackMode(t, d.pmode);
     else if (d.sec) toggleSection(t, d.sec);
     else if (d.secmenu) openSectionSheet(t, d.secmenu);
@@ -529,6 +665,7 @@ async function packHTML(t) {
       <div class="big">${st.done} <small>of ${st.total} packed</small></div><span class="pct ${st.left ? '' : 'all'}">${st.left ? pct + '%' : 'All packed ✓'}</span></div>
       <div class="bar2"><i style="width:${pct}%"></i></div></div>`;
   }
+  h += `<button class="pdfbtn" data-act="packpdf">${icon('file-text', 17, 2.2)}Export packing list as PDF${icon('chevron-right', 16, 2.2)}</button>`;
   for (const s of c.sections) {
     const p = presetOf(s.key);
     const sd = s.items.filter(i => home ? i.home : i.packed).length, stot = s.items.length;
